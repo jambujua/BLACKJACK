@@ -1,0 +1,4 @@
+mongodb+srv://deaagus785_db_user:yXeBKToNEuqQ7au5@cluster0.uh7hryx.mongodb.net/?appName=Cluster0
+
+id : deaagus785_db_user
+psw :yXeBKToNEuqQ7au5
