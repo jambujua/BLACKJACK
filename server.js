@@ -135,6 +135,14 @@ app.get('/api/history', async (req, res) => {
 // --- SOCKET.IO ROOMS & GAME ENGINE ---
 const rooms = {};
 
+async function savePlayerBalanceToDB(username, balance) {
+  try {
+    await Player.findOneAndUpdate({ username }, { balance: Number(balance) });
+  } catch (e) {
+    console.error("Gagal sinkronisasi saldo ke DB:", e.message);
+  }
+}
+
 io.on('connection', (socket) => {
   socket.on('create_room', ({ roomId, username, balance }) => {
     if (rooms[roomId]) {
@@ -152,7 +160,8 @@ io.on('connection', (socket) => {
       endGameAgrees: [],
       currentTurnPlayerIndex: 0,
       currentTurnHandIndex: 0,
-      dealerDone: false
+      dealerDone: false,
+      lastActivityTime: Date.now()
     };
     socket.join(roomId);
 
@@ -178,7 +187,7 @@ io.on('connection', (socket) => {
       socket.join(roomId);
       let isHost = (room.hostSocketId === socket.id);
       socket.emit('room_joined', { roomId, isHost, hostUsername: room.hostUsername });
-      io.to(roomId).emit('update_room_state', room);
+      socket.emit('update_room_state', room);
       return;
     }
 
@@ -187,6 +196,7 @@ io.on('connection', (socket) => {
       socketId: socket.id, username, balance, bet: 1000, ready: false, 
       hands: [[]], statuses: ['waiting'], splitCount: 0 
     });
+    room.lastActivityTime = Date.now();
     let isHost = (room.hostSocketId === socket.id);
     socket.emit('room_joined', { roomId, isHost, hostUsername: room.hostUsername });
     io.to(roomId).emit('update_room_state', room);
@@ -197,10 +207,40 @@ io.on('connection', (socket) => {
     if (!room) return;
     let p = room.players.find(x => x.socketId === socket.id);
     if (p && socket.id !== room.hostSocketId) {
-      p.bet = parseInt(bet) || 1000;
+      let numericBet = parseInt(bet) || 1000;
+      if (numericBet > 10000000) numericBet = 10000000; // Batas maksimal 10.000.000
+      p.bet = numericBet;
       p.ready = Boolean(ready);
+      room.lastActivityTime = Date.now();
     }
     io.to(roomId).emit('update_room_state', room);
+  });
+
+  // Fitur Bandar Kick Pemain
+  socket.on('kick_player', ({ roomId, usernameToKick }) => {
+    let room = rooms[roomId];
+    if (!room || room.hostSocketId !== socket.id) return;
+
+    let targetPlayer = room.players.find(p => p.username === usernameToKick);
+    if (targetPlayer) {
+      savePlayerBalanceToDB(targetPlayer.username, targetPlayer.balance);
+      io.to(targetPlayer.socketId).emit('kicked_from_room', 'Anda telah dikeluarkan oleh Bandar karena tidak ada respons.');
+      room.players = room.players.filter(p => p.username !== usernameToKick);
+      io.to(roomId).emit('update_room_state', room);
+    }
+  });
+
+  // Fitur Bandar Paksa Akhiri Game (1 menit tanpa respons atau manual)
+  socket.on('host_force_end_game', (roomId) => {
+    let room = rooms[roomId];
+    if (!room || room.hostSocketId !== socket.id) return;
+
+    room.players.forEach(p => {
+      savePlayerBalanceToDB(p.username, p.balance);
+    });
+
+    io.to(roomId).emit('game_ended_permanently', 'Permainan diakhiri oleh Bandar.');
+    delete rooms[roomId];
   });
 
   socket.on('request_end_game', (roomId) => {
@@ -217,14 +257,10 @@ io.on('connection', (socket) => {
     let totalParticipants = nonHostPlayers.length + (hostPlayer ? 1 : 0);
 
     if (room.endGameAgrees.length >= totalParticipants) {
-      room.players.forEach(async (p) => {
-        try {
-          await Player.findOneAndUpdate({ username: p.username }, { balance: p.balance });
-        } catch(e) {
-          console.error("Gagal menyimpan saldo ke DB:", e.message);
-        }
+      room.players.forEach((p) => {
+        savePlayerBalanceToDB(p.username, p.balance);
       });
-      io.to(roomId).emit('game_ended_permanently', "Game diakhiri dan seluruh poin telah disimpan ke database.");
+      io.to(roomId).emit('game_ended_permanently', "Game diakhiri dan seluruh saldo telah tersimpan ke database.");
       delete rooms[roomId];
       return;
     }
@@ -241,16 +277,11 @@ io.on('connection', (socket) => {
         return;
       }
       
-      let allReady = bettingPlayers.every(p => p.ready === true);
-      if (!allReady) {
-        socket.emit('room_error', 'Gagal: Masih ada pemain yang belum SIAP (Ready)!');
-        return;
-      }
-
       room.gameStarted = true;
       room.dealerDone = false;
       room.deck = buildDeck();
       room.dealerHand = [];
+      room.lastActivityTime = Date.now();
 
       room.players.forEach(p => {
         if (p.socketId !== room.hostSocketId) {
@@ -282,8 +313,10 @@ io.on('connection', (socket) => {
             p.roundResults = ['LOSE'];
             p.balance -= Number(p.bet);
             if (hostPlayer) hostPlayer.balance += Number(p.bet);
+            savePlayerBalanceToDB(p.username, p.balance);
           }
         });
+        if (hostPlayer) savePlayerBalanceToDB(hostPlayer.username, hostPlayer.balance);
         io.to(roomId).emit('round_ended', room);
         return;
       }
@@ -299,6 +332,7 @@ io.on('connection', (socket) => {
   socket.on('player_action', ({ roomId, handIndex, action }) => {
     let room = rooms[roomId];
     if (!room) return;
+    room.lastActivityTime = Date.now();
 
     if (socket.id === room.hostSocketId) {
       if (action === 'dealer_hit') {
@@ -341,6 +375,7 @@ io.on('connection', (socket) => {
       advanceTurn(room);
     } else if (action === 'double') {
       activePlayer.bet *= 2;
+      if (activePlayer.bet > 10000000) activePlayer.bet = 10000000;
       activePlayer.hands[handIndex].push(room.deck.pop());
       let score = calculateScore(activePlayer.hands[handIndex]);
       activePlayer.statuses[handIndex] = score > 21 ? 'bust' : 'stand';
@@ -359,19 +394,27 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_chat', ({ roomId, username, message }) => {
+    let room = rooms[roomId];
+    if (room) room.lastActivityTime = Date.now();
     io.to(roomId).emit('receive_chat', { username, message });
   });
 
   socket.on('disconnect', () => {
-    for (let roomId in rooms) {
-      let room = rooms[roomId];
-      let p = room.players.find(x => x.socketId === socket.id);
-      if (p) {
-        // Player disconnected temporarily
-      }
-    }
+    // Tidak langsung hapus pemain agar saat reload halaman bisa terhubung ulang (reconnect)
   });
 });
+
+// Interval pengecekan otomatis: Jika 1 menit tidak ada aktivitas saat game belum mulai / macet, bandar bisa akhiri
+setInterval(() => {
+  const now = Date.now();
+  for (let roomId in rooms) {
+    let room = rooms[roomId];
+    if (room && !room.gameStarted && room.lastActivityTime && (now - room.lastActivityTime > 60000)) {
+      // Lebih dari 60 detik (1 menit) tanpa aktivitas
+      io.to(roomId).emit('inactive_timeout_warning', 'Meja tidak aktif selama 1 menit.');
+    }
+  }
+}, 10000);
 
 function checkInitialPlayerStatus(room) {
   while (room.currentTurnPlayerIndex < room.players.length && room.players[room.currentTurnPlayerIndex].socketId === room.hostSocketId) {
@@ -495,7 +538,13 @@ function evaluateHostRound(room) {
         return 'LOSE';
       }
     });
+
+    savePlayerBalanceToDB(p.username, p.balance);
   });
+
+  if (hostPlayer) {
+    savePlayerBalanceToDB(hostPlayer.username, hostPlayer.balance);
+  }
 
   room.gameStarted = false;
   let roomId = room.roomId || Object.keys(rooms).find(k => rooms[k] === room);
