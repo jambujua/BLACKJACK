@@ -33,6 +33,15 @@
         .signal-green { background-color: #2ecc71; box-shadow: 0 0 8px #2ecc71; animation: pulseSignal 1.5s infinite; }
         .signal-red { background-color: #e74c3c; box-shadow: 0 0 8px #e74c3c; animation: pulseSignal 1s infinite; }
 
+        /* Peringatan Orientasi Landscape untuk HP */
+        #orientation-warning {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #111; z-index: 99999; color: #f1c40f; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center;
+        }
+        @media screen and (max-width: 900px) and (orientation: portrait) {
+            #orientation-warning { display: flex; }
+        }
+
         .room-header-bar {
             background: #2c3e50; padding: 12px 20px; border-radius: 8px;
             display: flex; justify-content: space-between; align-items: center;
@@ -86,20 +95,15 @@
         .turn-active { border-color: #f1c40f !important; animation: turnGlow 1.2s infinite; }
 
         .chat-box { background: rgba(0,0,0,0.5); padding: 8px; border-radius: 6px; height: 110px; overflow-y: auto; font-size: 12px; text-align: left; margin-bottom: 8px; }
-        
-        @media (max-width: 768px) {
-            body { padding: 5px; }
-            .container { width: 100%; padding: 5px; }
-            .room-panel { flex-direction: column; gap: 10px; align-items: center; }
-            .panel-card { width: 100%; }
-            .casino-table { padding: 10px; min-height: 280px; border-width: 6px; }
-            .card { width: 42px; height: 64px; font-size: 11px; }
-            .card-center { font-size: 14px; }
-            button { padding: 8px; font-size: 14px; }
-        }
     </style>
 </head>
 <body>
+
+    <!-- Peringatan Putar Layar HP -->
+    <div id="orientation-warning">
+        <h2>📱 Putar HP Anda ke Posisi Lanskap (Horizontal)</h2>
+        <p>Game ini dirancang optimal dalam tampilan mendatar agar tombol kontrol kasino terlihat sempurna.</p>
+    </div>
 
     <div id="signal-indicator">
         <div id="signal-dot" class="signal-dot signal-red"></div>
@@ -160,7 +164,8 @@
             <!-- PANEL KONTROL & SIAP -->
             <div id="control-panel" style="background:#2c3e50; padding:12px; border-radius:8px; margin-top:12px;">
                 <div id="betting-controls">
-                    <label>Taruhan Poin:</label><input type="number" id="player-bet" value="1000" style="max-width:140px; display:inline-block;">
+                    <label>Taruhan Poin (Max 10.000.000):</label>
+                    <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:160px; display:inline-block;">
                     <button onclick="toggleReady()" id="ready-btn" style="max-width:160px; background:#2ecc71; color:white; display:inline-block;">SIAP (Ready)</button>
                 </div>
                 
@@ -172,9 +177,10 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
                     <button onclick="requestEndGame()" id="end-game-btn" style="background:#c0392b; color:white; max-width:200px;">Akhiri Game (Setuju)</button>
-                    <span id="end-game-status" style="font-size:12px; color:#f1c40f; display:block; margin-top:4px;"></span>
+                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:#e67e22; color:white; max-width:220px; display:none;">Paksa Akhiri (1 Menit Inaktif)</button>
+                    <span id="end-game-status" style="font-size:12px; color:#f1c40f; display:block; margin-top:4px; width:100%;"></span>
                 </div>
             </div>
 
@@ -212,6 +218,31 @@
         const API_URL = '/api';
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
 
+        // Sistem Web Audio API untuk Efek Suara Blackjack / Menang
+        function playBlackjackSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nada D5
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // Nada A5
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } catch(e) { console.error("Audio error:", e); }
+        }
+
+        function validateMaxBet(input) {
+            if (input.value > 10000000) {
+                input.value = 10000000;
+                alert("Batas maksimal taruhan adalah 10.000.000 poin!");
+            }
+        }
+
         function formatNumber(num) {
             return Number(num || 0).toLocaleString('id-ID');
         }
@@ -222,8 +253,12 @@
             dot.className = 'signal-dot signal-green';
             text.innerText = 'Online';
 
-            if (myData.roomId && myData.username) {
-                socket.emit('join_room', { roomId: myData.roomId, username: myData.username, balance: myData.balance });
+            // Auto Reconnect jika tersimpan di localStorage
+            let savedRoom = localStorage.getItem('bj_room');
+            let savedUser = localStorage.getItem('bj_user');
+            if (savedRoom && savedUser && !myData.roomId) {
+                myData.username = savedUser;
+                socket.emit('join_room', { roomId: savedRoom, username: savedUser, balance: myData.balance });
             }
         });
 
@@ -251,6 +286,7 @@
             if (data.success) {
                 myData.username = data.player.username;
                 myData.balance = data.player.balance;
+                localStorage.setItem('bj_user', myData.username);
                 document.getElementById('auth-section').style.display = 'none';
                 document.getElementById('lobby-section').style.display = 'block';
                 document.getElementById('lbl-username').innerText = myData.username;
@@ -263,17 +299,25 @@
         function createRoom() {
             let roomId = document.getElementById('create-room-id').value.trim();
             if(!roomId) { alert("Masukkan ID Room!"); return; }
+            localStorage.setItem('bj_room', roomId);
             socket.emit('create_room', { roomId, username: myData.username, balance: myData.balance });
         }
 
         function joinRoom() {
             let roomId = document.getElementById('join-room-id').value.trim();
             if(!roomId) { alert("Masukkan ID Room!"); return; }
+            localStorage.setItem('bj_room', roomId);
             socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
         }
 
         socket.on('room_error', (msg) => { alert(msg); document.getElementById('lobby-msg').innerText = msg; });
         
+        socket.on('kicked_from_room', (msg) => {
+            alert(msg);
+            localStorage.removeItem('bj_room');
+            location.reload();
+        });
+
         socket.on('room_joined', ({ roomId, isHost, hostUsername }) => {
             myData.roomId = roomId;
             myData.isHost = isHost;
@@ -283,19 +327,21 @@
             document.getElementById('current-host-lbl').innerText = hostUsername;
             document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
             
-            // Pengaturan panel UI berdasarkan status host/bandar secara tegas
             if(myData.isHost) {
                 document.getElementById('host-controls').style.display = 'block';
                 document.getElementById('betting-controls').style.display = 'none';
+                document.getElementById('host-force-end-btn').style.display = 'inline-block';
             } else {
                 document.getElementById('host-controls').style.display = 'none';
                 document.getElementById('betting-controls').style.display = 'block';
+                document.getElementById('host-force-end-btn').style.display = 'none';
             }
         });
 
         function toggleReady() {
             myData.isReady = !myData.isReady;
             let bet = document.getElementById('player-bet').value;
+            if (bet > 10000000) bet = 10000000;
             let btn = document.getElementById('ready-btn');
             btn.innerText = myData.isReady ? "BATAL SIAP" : "SIAP (Ready)";
             btn.style.background = myData.isReady ? "#e74c3c" : "#2ecc71";
@@ -310,13 +356,26 @@
             socket.emit('request_end_game', myData.roomId);
         }
 
+        function hostForceEndGame() {
+            if (confirm("Apakah Anda yakin ingin memaksa mengakhiri permainan?")) {
+                socket.emit('host_force_end_game', myData.roomId);
+            }
+        }
+
         socket.on('game_ended_permanently', (msg) => {
             alert(msg);
+            localStorage.removeItem('bj_room');
             location.reload();
         });
 
         function startGame() { 
             socket.emit('start_game', myData.roomId); 
+        }
+
+        function kickPlayer(username) {
+            if (confirm(`Keluarkan pemain ${username} dari meja?`)) {
+                socket.emit('kick_player', { roomId: myData.roomId, usernameToKick: username });
+            }
         }
 
         function sendAction(action) {
@@ -332,16 +391,16 @@
         socket.on('update_room_state', (room) => { 
             window.currentRoomState = room;
             document.getElementById('current-host-lbl').innerText = room.hostUsername;
-
-            // Pastikan status isHost tersinkronisasi akurat berdasarkan socket ID server
             myData.isHost = (room.hostSocketId === socket.id);
             
             if(myData.isHost) {
                 document.getElementById('host-controls').style.display = 'block';
                 document.getElementById('betting-controls').style.display = 'none';
+                document.getElementById('host-force-end-btn').style.display = 'inline-block';
             } else {
                 document.getElementById('host-controls').style.display = 'none';
                 document.getElementById('betting-controls').style.display = 'block';
+                document.getElementById('host-force-end-btn').style.display = 'none';
             }
             
             let me = room.players.find(p => p.username === myData.username);
@@ -370,6 +429,10 @@
             }
 
             renderRoom(room); 
+        });
+
+        socket.on('inactive_timeout_warning', (msg) => {
+            document.getElementById('end-game-status').innerText = "⚠️ Peringatan: " + msg + " Bandar dapat menekan tombol Paksa Akhiri.";
         });
 
         socket.on('game_started', (room) => {
@@ -406,6 +469,9 @@
 
             let summary = room.players.filter(p => p.socketId !== room.hostSocketId).map(p => {
                 let resStr = p.roundResults ? p.roundResults.join('/') : '';
+                if (resStr.includes('BLACKJACK') || resStr.includes('WIN')) {
+                    playBlackjackSound(); // Bunyikan suara menang / blackjack
+                }
                 return `${p.username}: [${resStr}]`;
             }).join(' | ');
 
@@ -479,6 +545,9 @@
                     }
                     cardsHtml += '</div>';
 
+                    // Tombol Kick khusus Bandar jika pemain lama belum siap / inaktif
+                    let kickBtnHtml = (myData.isHost && !room.gameStarted) ? `<br><button onclick="kickPlayer('${p.username}')" style="background:#e74c3c; color:white; padding:4px 8px; font-size:11px; margin-top:5px; width:auto;">Kick Pemain</button>` : '';
+
                     pList.innerHTML += `<div class="player-chip ${statusClass}">
                         ${bjBadge}
                         👤 <b style="color:#f1c40f; font-size:14px;">${labelName}</b><br>
@@ -486,6 +555,7 @@
                         <small style="color:#ffffff;">Skor: ${handScore} | Bet: ${formatNumber(p.bet)}</small><br>
                         Status: <span style="color:#3498db;">${room.gameStarted ? p.statuses[hIdx] : (p.ready ? 'SIAP' : 'Menunggu')}</span>
                         ${cardsHtml}
+                        ${kickBtnHtml}
                     </div>`;
 
                     if (room.gameStarted && p.socketId === socket.id && isCurrentTurnPlayer && room.currentTurnHandIndex === hIdx && p.statuses[hIdx] === 'playing') {
