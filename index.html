@@ -283,7 +283,8 @@
             document.getElementById('current-host-lbl').innerText = hostUsername;
             document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
             
-            if(isHost) {
+            // Pengaturan panel UI berdasarkan status host/bandar secara tegas
+            if(myData.isHost) {
                 document.getElementById('host-controls').style.display = 'block';
                 document.getElementById('betting-controls').style.display = 'none';
             } else {
@@ -331,6 +332,17 @@
         socket.on('update_room_state', (room) => { 
             window.currentRoomState = room;
             document.getElementById('current-host-lbl').innerText = room.hostUsername;
+
+            // Pastikan status isHost tersinkronisasi akurat berdasarkan socket ID server
+            myData.isHost = (room.hostSocketId === socket.id);
+            
+            if(myData.isHost) {
+                document.getElementById('host-controls').style.display = 'block';
+                document.getElementById('betting-controls').style.display = 'none';
+            } else {
+                document.getElementById('host-controls').style.display = 'none';
+                document.getElementById('betting-controls').style.display = 'block';
+            }
             
             let me = room.players.find(p => p.username === myData.username);
             if (me) {
@@ -345,14 +357,15 @@
             if (myData.isHost) {
                 let startBtn = document.getElementById('start-game-btn');
                 let bettingPlayers = room.players.filter(p => p.socketId !== room.hostSocketId);
-                // Tombol Mulai aktif jika game belum mulai, ada pemain, dan semua pemain ready
-                let allReady = !room.gameStarted && bettingPlayers.length > 0 && bettingPlayers.every(p => p.ready === true);
-                if (allReady) {
+                let canStart = !room.gameStarted && bettingPlayers.length > 0;
+                if (canStart) {
                     startBtn.style.opacity = "1";
                     startBtn.style.cursor = "pointer";
+                    startBtn.disabled = false;
                 } else {
                     startBtn.style.opacity = "0.5";
                     startBtn.style.cursor = "not-allowed";
+                    startBtn.disabled = true;
                 }
             }
 
@@ -419,7 +432,6 @@
             let hostActionDiv = document.getElementById('host-dealer-action-btns');
             let bettingPlayers = room.players.filter(p => p.socketId !== room.hostSocketId);
             
-            // Munculkan tombol aksi bandar jika game sudah mulai, pemain sudah selesai semua, dan dealer belum done
             if (myData.isHost && room.gameStarted && room.dealerDone && bettingPlayers.length > 0) {
                 hostActionDiv.style.display = 'block';
                 let hitBtn = document.getElementById('dealer-hit-btn');
