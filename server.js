@@ -485,7 +485,6 @@ function evaluateHostRound(room) {
         return 'BLACKJACK';
       } else if (dScore > 21 || pScore > dScore) {
         p.balance += betAmount; 
-        if (hostPlayer) hostPlayer.balance -= winBonus; // Diperbaiki dari winBonus
         if (hostPlayer) hostPlayer.balance -= betAmount;
         return 'WIN';
       } else if (pScore === dScore) {
