@@ -3,111 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack 507</title>
+    <title>Blackjack 507 - Luxury Edition</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: white; text-align: center; margin: 0; padding: 10px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .card-box { background-color: #1e272e; padding: 15px; border-radius: 8px; max-width: 380px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.7); text-align: left; border: 1px solid #34495e; }
-        .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 18px; }
-        .form-group { margin-bottom: 10px; }
-        input, select { width: 100%; box-sizing: border-box; padding: 6px; border-radius: 5px; border: 1px solid #444; background: #1a1a1a; color: white; margin-top: 4px; font-size:13px; }
-        button { padding: 8px; font-size: 13px; border-radius: 5px; border: none; background-color: #f1c40f; font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px; color: black; }
-        button:hover { background-color: #f39c12; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%); 
+            color: #f3f4f6; 
+            text-align: center; 
+            margin: 0; 
+            padding: 10px; 
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1050px; margin: 0 auto; }
+
+        /* Auth & Lobby Luxury Box */
+        .card-box { 
+            background: rgba(17, 24, 39, 0.85); 
+            backdrop-filter: blur(12px);
+            padding: 25px; 
+            border-radius: 16px; 
+            max-width: 380px; 
+            margin: 40px auto; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(241, 196, 15, 0.1); 
+            text-align: left; 
+            border: 1px solid rgba(241, 196, 15, 0.3); 
+        }
+        .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+        .form-group { margin-bottom: 12px; }
+        label { font-size: 12px; color: #9ca3af; font-weight: 600; }
+        input, select { 
+            width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; 
+            border: 1px solid #374151; background: #0b0f19; color: white; margin-top: 5px; font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        input:focus { border-color: #f1c40f; outline: none; box-shadow: 0 0 8px rgba(241, 196, 15, 0.3); }
+        
+        button { 
+            padding: 11px; font-size: 14px; border-radius: 8px; border: none; 
+            background: linear-gradient(135deg, #f1c40f 0%, #d4af37 100%); 
+            font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; color: #111; 
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3);
+            transition: all 0.2s ease;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(241, 196, 15, 0.5); }
+        button:active { transform: translateY(1px); }
         
         #lobby-section, #game-wrapper, #auth-section { display: none; }
-        .room-panel { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
-        .panel-card { background: #1e272e; padding: 12px; border-radius: 8px; width: 100%; max-width: 320px; text-align: left; box-sizing: border-box; border: 1px solid #34495e; }
+        .room-panel { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+        .panel-card { 
+            background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(10px);
+            padding: 15px; border-radius: 12px; width: 100%; max-width: 330px; text-align: left; 
+            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.08); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
 
+        /* Signal Indicator */
         #signal-indicator {
-            position: fixed; top: 6px; left: 6px; display: flex; align-items: center; gap: 6px;
-            background: rgba(0, 0, 0, 0.8); padding: 4px 10px; border-radius: 20px; font-size: 11px; z-index: 9999;
-            border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);
+            position: fixed; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px;
+            background: rgba(15, 23, 42, 0.9); padding: 5px 12px; border-radius: 20px; font-size: 11px; z-index: 9999;
+            border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(8px);
         }
         .signal-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .signal-green { background-color: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
-        .signal-red { background-color: #e74c3c; box-shadow: 0 0 6px #e74c3c; }
+        .signal-green { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+        .signal-red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
 
+        /* Header Bar */
         .room-header-bar {
-            background: #1e272e; padding: 8px 12px; border-radius: 6px;
+            background: rgba(17, 24, 39, 0.9); padding: 10px 18px; border-radius: 10px;
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; border-left: 4px solid #f1c40f; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            font-size: 12px; flex-wrap: wrap; gap: 8px; border: 1px solid #34495e;
+            margin-bottom: 12px; border-left: 5px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-size: 13px; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
         }
 
+        /* Meja Kasino Eksklusif */
         .casino-table {
-            border: 2px solid rgba(255,255,255,0.2); 
-            border-radius: 10px;
-            padding: 10px; 
+            border: 2px solid rgba(241, 196, 15, 0.25); 
+            border-radius: 16px;
+            padding: 15px; 
             margin-top: 5px;
             display: flex; 
             flex-direction: column; 
-            gap: 10px;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
-            transition: background 0.5s ease;
+            gap: 12px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            transition: background 0.8s ease;
         }
         
         .dealer-box-ui {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 8px;
-            padding: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(241, 196, 15, 0.2);
+            border-radius: 12px;
+            padding: 10px;
             text-align: center;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
         }
 
         .players-box-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
         }
 
+        /* Animasi Kartu Premium */
         .cards-container { 
             display: flex; justify-content: center; 
-            min-height: 55px; margin-top: 4px; 
+            min-height: 60px; margin-top: 6px; 
             perspective: 1000px; 
         }
+        @keyframes cardSlideIn {
+            0% { transform: translateY(-120px) scale(0.3) rotate(-20deg); opacity: 0; }
+            60% { transform: translateY(10px) scale(1.05) rotate(5deg); opacity: 1; }
+            100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+        }
         .card {
-            background-color: #ffffff; color: #222222; width: 36px; height: 54px; border-radius: 4px;
+            background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 100%);
+            color: #111827; width: 40px; height: 60px; border-radius: 6px;
             display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: 2px; font-size: 10px; font-weight: bold; box-shadow: -2px 2px 5px rgba(0,0,0,0.6);
-            border: 1px solid #bbb; position: relative; user-select: none;
+            padding: 3px; font-size: 11px; font-weight: 700; box-shadow: -3px 4px 10px rgba(0,0,0,0.6);
+            border: 1px solid #d1d5db; position: relative; user-select: none;
             opacity: 0;
-            animation: cardDrop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform-origin: top center;
+            animation: cardSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .card:not(:first-child) {
-            margin-left: -15px; 
-        }
-
-        @keyframes cardDrop {
-            0% { transform: translateY(-80px) scale(0.4); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
+        .card:not(:first-child) { margin-left: -16px; }
+        
         .card-top { align-self: flex-start; font-size: 9px; line-height: 1; }
-        .card-center { font-size: 14px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .card-center { font-size: 15px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .card-bottom { align-self: flex-end; font-size: 9px; line-height: 1; transform: rotate(180deg); }
-        .red-suit { color: #d63031 !important; }
-        .closed-card { background: repeating-linear-gradient(45deg, #1e3799, #1e3799 5px, #0984e3 5px, #0984e3 10px); color: transparent; border: 1px solid #fff; }
+        .red-suit { color: #ef4444 !important; }
+        .closed-card { background: repeating-linear-gradient(45deg, #1e3a8a, #1e3a8a 6px, #1d4ed8 6px, #1d4ed8 12px); color: transparent; border: 1px solid #93c5fd; }
 
         .bj-badge {
-            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(135deg, #f1c40f, #e67e22); color: white;
-            padding: 2px 5px; font-size: 9px; font-weight: bold; border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #fff; white-space: nowrap;
+            position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
+            padding: 2px 7px; font-size: 9px; font-weight: 700; border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.6); border: 1px solid #fef3c7; white-space: nowrap;
+            letter-spacing: 0.5px;
+            animation: pulseBadge 1.5s infinite;
+        }
+        @keyframes pulseBadge {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.08); }
+            100% { transform: translateX(-50%) scale(1); }
         }
 
-        .player-chip { background: rgba(0,0,0,0.5); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); position: relative; font-size: 11px; text-align: center; }
-        .ready-true { border-color: #2ecc71; }
-        .ready-false { border-color: #e74c3c; }
+        /* Player Chip Container & Split Hand Card UI */
+        .player-chip { 
+            background: rgba(15, 23, 42, 0.7); 
+            padding: 10px; 
+            border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.12); 
+            position: relative; 
+            font-size: 11px; 
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+        }
+        .ready-true { border-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.25); }
+        .ready-false { border-color: #ef4444; }
         .bust-card { opacity: 0.5; filter: grayscale(80%); }
         
         @keyframes turnGlow {
-            0% { border-color: #f1c40f; box-shadow: 0 0 4px #f1c40f; }
-            50% { border-color: #e67e22; box-shadow: 0 0 10px #f1c40f; }
-            100% { border-color: #f1c40f; box-shadow: 0 0 4px #f1c40f; }
+            0% { border-color: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+            50% { border-color: #fbbf24; box-shadow: 0 0 18px #f59e0b; }
+            100% { border-color: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
         }
-        .turn-active { border-color: #f1c40f !important; animation: turnGlow 1.2s infinite; }
+        .turn-active { border-color: #f59e0b !important; animation: turnGlow 1.2s infinite; background: rgba(245, 158, 11, 0.08); }
 
-        .chat-box { background: #111827; padding: 6px; border-radius: 6px; height: 70px; overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 4px; border: 1px solid #374151; }
+        /* Split Hand Sub-Card Styling */
+        .split-hand-box {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 6px;
+            margin-top: 6px;
+            transition: all 0.3s ease;
+        }
+        .split-hand-active {
+            border: 1px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.12);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .chat-box { 
+            background: #030712; padding: 8px; border-radius: 8px; height: 80px; 
+            overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 6px; 
+            border: 1px solid #1f2937; 
+        }
     </style>
 </head>
 <body>
@@ -120,97 +207,103 @@
     <div class="container">
         <!-- AUTH SECTION -->
         <div id="auth-section" class="card-box">
-            <h2>Blackjack 507 Login</h2>
-            <div class="form-group"><label>Username:</label><input type="text" id="username"></div>
-            <div class="form-group"><label>Password:</label><input type="password" id="password"></div>
+            <h2>Blackjack 507</h2>
+            <div class="form-group"><label>Username</label><input type="text" id="username" placeholder="Masukkan username..."></div>
+            <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="Masukkan password..."></div>
             <button onclick="loginUser()">Masuk (Login)</button>
-            <button onclick="registerUser()" style="background:#3498db; color:white;">Daftar Akun Baru</button>
-            <div id="auth-msg" style="color:#e74c3c; margin-top:8px; text-align:center; font-weight:bold; font-size:11px;"></div>
+            <button onclick="registerUser()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white;">Daftar Akun Baru</button>
+            <div id="auth-msg" style="color:#ef4444; margin-top:8px; text-align:center; font-weight:600; font-size:11px;"></div>
         </div>
 
         <!-- LOBBY ROOM SECTION -->
         <div id="lobby-section">
-            <h2>Selamat Datang, <span id="lbl-username" style="color:#f1c40f;"></span>!</h2>
-            <p style="font-size:12px;">Saldo Poin: <span id="lbl-balance" style="color:#2ecc71; font-weight:bold;">0</span></p>
+            <h2 style="color: #f1c40f; margin-bottom: 5px;">Selamat Datang, <span id="lbl-username"></span></h2>
+            <p style="font-size: 13px; color: #9ca3af;">Saldo Poin: <span id="lbl-balance" style="color:#10b981; font-weight:700;">0</span></p>
             <div class="room-panel">
                 <div class="panel-card">
-                    <h3 style="font-size: 14px; margin-top:0;">Buat Room Baru</h3>
-                    <label style="font-size:11px;">ID Room:</label><input type="text" id="create-room-id" placeholder="Contoh: room17">
+                    <h3 style="font-size: 14px; margin-top:0; color:#f1c40f;">Buat Room Baru</h3>
+                    <label>ID Room</label><input type="text" id="create-room-id" placeholder="Contoh: room17">
                     <button onclick="createRoom()">Buat Room (Bandar)</button>
                 </div>
                 <div class="panel-card">
-                    <h3 style="font-size: 14px; margin-top:0;">Gabung Room</h3>
-                    <label style="font-size:11px;">ID Room:</label><input type="text" id="join-room-id" placeholder="ID Room teman">
-                    <button onclick="joinRoom()" style="background:#2ecc71;">Gabung (Pemain)</button>
+                    <h3 style="font-size: 14px; margin-top:0; color:#10b981;">Gabung Room</h3>
+                    <label>ID Room</label><input type="text" id="join-room-id" placeholder="ID Room teman">
+                    <button onclick="joinRoom()" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">Gabung (Pemain)</button>
                 </div>
             </div>
-            <div id="lobby-msg" style="color:#e74c3c; margin-top:10px; font-weight:bold; font-size:11px;"></div>
+            <div id="lobby-msg" style="color:#ef4444; margin-top:10px; font-weight:600; font-size:11px;"></div>
         </div>
 
         <!-- GAME ROOM SECTION -->
         <div id="game-wrapper">
             <div class="room-header-bar">
                 <div><span>Room:</span> <strong id="current-room-lbl" style="color:#f1c40f;">-</strong></div>
-                <div><span>Bandar:</span> <strong id="current-host-lbl" style="color:#2ecc71;">-</strong></div>
-                <div><span>Saldo Anda:</span> <strong id="game-live-balance" style="color:#2ecc71;">0</strong></div>
+                <div><span>Bandar:</span> <strong id="current-host-lbl" style="color:#10b981;">-</strong></div>
+                <div><span>Saldo Anda:</span> <strong id="game-live-balance" style="color:#10b981;">0</strong></div>
             </div>
             
+            <!-- MEJA KOTAK PRESISI DENGAN TEMA RANDOM DINAMIS -->
             <div class="casino-table" id="casino-table-theme">
+                <!-- Kotak Bandar -->
                 <div class="dealer-box-ui">
-                    <div style="font-size:12px; font-weight:bold; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
-                    <div style="font-size:10px; color:#cbd5e1;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
+                    <div style="font-size:12px; font-weight:700; color:#f1c40f; margin-bottom:2px; letter-spacing: 0.5px;">👑 BANDAR / DEALER</div>
+                    <div style="font-size:10px; color:#9ca3af;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
                     <div class="cards-container" id="dealer-cards"></div>
                 </div>
 
+                <!-- Kotak Grid Pemain Kompak & Rapi -->
                 <div>
-                    <div style="font-size:11px; font-weight:bold; color:#38bdf8; margin-bottom:4px; text-align:left;">👥 MEJA PEMAIN</div>
+                    <div style="font-size:11px; font-weight:700; color:#38bdf8; margin-bottom:6px; text-align:left; letter-spacing: 0.5px;">👥 MEJA PEMAIN</div>
                     <div class="players-box-grid" id="room-players-list"></div>
                 </div>
             </div>
 
-            <div id="control-panel" style="background:#1e272e; padding:8px; border-radius:8px; margin-top:8px; border: 1px solid #34495e;">
+            <!-- PANEL KONTROL & SIAP -->
+            <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px);">
                 <div id="betting-controls">
-                    <label style="font-size:11px;">Taruhan (Max 10 Juta):</label><br>
-                    <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:120px; display:inline-block; padding:4px;">
-                    <button onclick="toggleReady()" id="ready-btn" style="max-width:120px; background:#2ecc71; color:white; display:inline-block; padding:5px;">SIAP (Ready)</button>
+                    <label>Taruhan Poin (Max 10 Juta):</label><br>
+                    <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:140px; display:inline-block; padding:6px;">
+                    <button onclick="toggleReady()" id="ready-btn" style="max-width:140px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; display:inline-block; padding:7px;">SIAP (Ready)</button>
                 </div>
                 
                 <div id="host-controls" style="margin-top:6px; display:none;">
-                    <button onclick="startGame()" id="start-game-btn" style="background:#f1c40f; color:black; max-width:150px; display:inline-block; padding:6px;">Mulai Kartu</button>
+                    <button onclick="startGame()" id="start-game-btn" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; max-width:160px; display:inline-block; padding:7px;">Mulai Kartu</button>
                     <div id="host-dealer-action-btns" style="display:none; margin-top:4px;">
-                        <button onclick="dealerHit()" id="dealer-hit-btn" style="background:#3498db; color:white; max-width:110px; display:inline-block; padding:6px;">Bandar Hit</button>
-                        <button onclick="dealerStand()" id="dealer-stand-btn" style="background:#e74c3c; color:white; max-width:110px; display:inline-block; padding:6px;">Bandar Stand</button>
+                        <button onclick="dealerHit()" id="dealer-hit-btn" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white; max-width:120px; display:inline-block; padding:6px;">Bandar Hit</button>
+                        <button onclick="dealerStand()" id="dealer-stand-btn" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; max-width:120px; display:inline-block; padding:6px;">Bandar Stand</button>
                     </div>
                 </div>
 
-                <div style="margin-top: 6px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
-                    <button onclick="requestEndGame()" id="end-game-btn" style="background:#c0392b; color:white; max-width:140px; font-size:11px; padding:6px;">Akhiri Game</button>
-                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:#e67e22; color:white; max-width:160px; display:none; font-size:11px; padding:6px;">Paksa Akhiri (Inaktif)</button>
-                    <span id="end-game-status" style="font-size:10px; color:#f1c40f; display:block; width:100%; margin-top:2px;"></span>
+                <div style="margin-top: 8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                    <button onclick="requestEndGame()" id="end-game-btn" style="background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color:white; max-width:150px; font-size:11px; padding:7px;">Akhiri Game</button>
+                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:linear-gradient(135deg, #d97706 0%, #b45309 100%); color:white; max-width:170px; display:none; font-size:11px; padding:7px;">Paksa Akhiri (Inaktif)</button>
+                    <span id="end-game-status" style="font-size:10px; color:#f1c40f; display:block; width:100%; margin-top:2px; font-weight:600;"></span>
                 </div>
             </div>
 
-            <div id="action-panel" style="display:none; margin-top:8px;">
-                <p id="turn-notice" style="color:#f1c40f; font-weight:bold; font-size:11px; margin-bottom:4px;"></p>
-                <div style="display:flex; gap:4px; justify-content:center;">
-                    <button onclick="sendAction('hit')" style="background:#3498db; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Hit</button>
-                    <button onclick="sendAction('stand')" style="background:#e74c3c; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Stand</button>
-                    <button onclick="sendAction('double')" style="background:#2ecc71; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Double</button>
-                    <button onclick="sendAction('split')" style="background:#9b59b6; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Split</button>
+            <!-- TOMBOL AKSI PEMAIN -->
+            <div id="action-panel" style="display:none; margin-top:10px;">
+                <p id="turn-notice" style="color:#f59e0b; font-weight:700; font-size:12px; margin-bottom:5px;"></p>
+                <div style="display:flex; gap:6px; justify-content:center;">
+                    <button onclick="sendAction('hit')" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px;">Hit</button>
+                    <button onclick="sendAction('stand')" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px;">Stand</button>
+                    <button onclick="sendAction('double')" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px;">Double</button>
+                    <button onclick="sendAction('split')" style="background:linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px;">Split</button>
                 </div>
             </div>
 
-            <div class="room-panel" style="margin-top:8px;">
-                <div class="panel-card" style="padding:8px; max-width: 100%;">
-                    <h3 style="margin:0 0 4px 0; font-size:12px;">📊 Status Ronde</h3>
-                    <p id="round-status-text" style="color:#f1c40f; font-weight:bold; font-size:10px; margin:0;">Menunggu pemain siap...</p>
+            <!-- CHAT & HISTORY -->
+            <div class="room-panel" style="margin-top:10px;">
+                <div class="panel-card" style="padding:10px; max-width: 100%;">
+                    <h3 style="margin:0 0 4px 0; font-size:12px; color:#f1c40f;">📊 Status Ronde</h3>
+                    <p id="round-status-text" style="color:#e5e7eb; font-weight:600; font-size:10px; margin:0;">Menunggu pemain siap...</p>
                 </div>
-                <div class="panel-card" style="padding:8px; max-width: 100%;">
-                    <h3 style="margin:0 0 4px 0; font-size:12px;">💬 Chat Room</h3>
+                <div class="panel-card" style="padding:10px; max-width: 100%;">
+                    <h3 style="margin:0 0 4px 0; font-size:12px; color:#38bdf8;">💬 Chat Room</h3>
                     <div class="chat-box" id="chat-messages"></div>
-                    <div style="display:flex; gap:4px;">
-                        <input type="text" id="chat-input" placeholder="Pesan..." onkeypress="checkEnter(event)" style="margin:0; font-size:11px; padding:4px;">
-                        <button onclick="sendChat()" style="width:50px; margin:0; padding:4px; font-size:11px;">Kirim</button>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="chat-input" placeholder="Tulis pesan..." onkeypress="checkEnter(event)" style="margin:0; font-size:11px; padding:6px;">
+                        <button onclick="sendChat()" style="width:60px; margin:0; padding:6px; font-size:11px; background:linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color:white;">Kirim</button>
                     </div>
                 </div>
             </div>
@@ -223,10 +316,10 @@
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
 
         const tableThemes = [
-            "linear-gradient(135deg, #064e3b 0%, #022c22 100%)",
-            "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)",
-            "linear-gradient(135deg, #581c87 0%, #3b0764 100%)",
-            "linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"
+            "radial-gradient(circle at center, #064e3b 0%, #022c22 100%)", // Hijau Mewah Kasino
+            "radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%)", // Biru Midnight Elegan
+            "radial-gradient(circle at center, #581c87 0%, #3b0764 100%)", // Ungu Royal
+            "radial-gradient(circle at center, #7f1d1d 0%, #450a0a 100%)"  // Merah Marun Klasik
         ];
 
         function applyRandomTableTheme() {
@@ -315,7 +408,7 @@
             let p = document.getElementById('password').value;
             let res = await fetch(`${API_URL}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username: u, password: p}) });
             let data = await res.json();
-            document.getElementById('auth-msg').style.color = data.success ? '#2ecc71' : '#e74c3c';
+            document.getElementById('auth-msg').style.color = data.success ? '#10b981' : '#ef4444';
             document.getElementById('auth-msg').innerText = data.message;
         }
 
@@ -388,7 +481,7 @@
             if (bet > 10000000) bet = 10000000;
             let btn = document.getElementById('ready-btn');
             btn.innerText = myData.isReady ? "BATAL SIAP" : "SIAP (Ready)";
-            btn.style.background = myData.isReady ? "#e74c3c" : "#2ecc71";
+            btn.style.background = myData.isReady ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)";
             socket.emit('set_ready', { roomId: myData.roomId, bet, ready: myData.isReady });
         }
 
@@ -396,7 +489,7 @@
             myData.hasAgreedEnd = true;
             let btn = document.getElementById('end-game-btn');
             btn.innerText = "Setuju Keluar ✓";
-            btn.style.background = "#27ae60";
+            btn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
             socket.emit('request_end_game', myData.roomId);
         }
 
@@ -472,7 +565,7 @@
 
         socket.on('game_started', (room) => {
             window.currentRoomState = room;
-            document.getElementById('round-status-text').innerText = "Game Berlangsung...";
+            document.getElementById('round-status-text').innerText = "Game Sedang Berlangsung...";
             let me = room.players.find(p => p.username === myData.username);
             if (me) {
                 myData.balance = me.balance;
@@ -487,7 +580,7 @@
             if(!myData.isHost) document.getElementById('betting-controls').style.display = 'block';
             myData.isReady = false;
             let btn = document.getElementById('ready-btn');
-            if(btn) { btn.innerText = "SIAP (Ready)"; btn.style.background = "#2ecc71"; }
+            if(btn) { btn.innerText = "SIAP (Ready)"; btn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)"; }
 
             let me = room.players.find(p => p.username === myData.username);
             if (me) {
@@ -496,12 +589,12 @@
             }
 
             let summary = room.players.filter(p => p.socketId !== room.hostSocketId).map(p => {
-                let resStr = p.roundResults ? p.roundResults.join('/') : '';
+                let resStr = p.roundResults ? p.roundResults.join(' & ') : '';
                 if (resStr.includes('BLACKJACK') || resStr.includes('WIN')) playBlackjackSound();
                 return `${p.username}: [${resStr}]`;
             }).join(' | ');
 
-            document.getElementById('round-status-text').innerText = `Hasil: ${summary || 'Selesai'}`;
+            document.getElementById('round-status-text').innerText = `Hasil Akhir: ${summary || 'Selesai'}`;
             renderRoom(room, false);
         });
 
@@ -516,7 +609,7 @@
                 room.dealerHand.forEach((c, idx) => {
                     let hide = (idx === 0 && !showAllDealer && !myData.isHost && !room.dealerDone);
                     let cardEl = createCardUI(c, hide);
-                    cardEl.style.animationDelay = `${idx * 0.2}s`;
+                    cardEl.style.animationDelay = `${idx * 0.15}s`;
                     dContainer.appendChild(cardEl);
                 });
             }
@@ -540,49 +633,70 @@
             room.players.forEach((p, pIdx) => {
                 if (p.socketId === room.hostSocketId) return;
 
-                let statusClass = p.ready ? 'ready-true' : 'ready-false';
+                let mainStatusClass = p.ready ? 'ready-true' : 'ready-false';
                 let isCurrentTurnPlayer = (room.gameStarted && room.currentTurnPlayerIndex === pIdx);
-                if (isCurrentTurnPlayer) statusClass += ' turn-active';
+                if (isCurrentTurnPlayer) mainStatusClass += ' turn-active';
 
+                let handsHtml = '';
+                
+                // RENDER TANGAN PEMAIN (Mendukung Split dengan Rapi & Elegan)
                 p.hands.forEach((hand, hIdx) => {
-                    let labelName = p.hands.length > 1 ? `${p.username} (${hIdx + 1})` : p.username;
                     let handScore = calculateScore(hand);
                     let isBJ = hand.length === 2 && handScore === 21;
-                    let bjBadge = isBJ ? `<div class="bj-badge">★ BJ! ★</div>` : '';
+                    let bjBadge = isBJ ? `<div class="bj-badge">★ BLACKJACK! ★</div>` : '';
                     let isBust = (p.statuses[hIdx] === 'bust' || handScore > 21);
-                    if(isBust) statusClass += ' bust-card';
+                    
+                    let isThisHandTurn = (isCurrentTurnPlayer && room.currentTurnHandIndex === hIdx && room.gameStarted);
+                    if (isThisHandTurn) isMyTurn = true;
+
+                    let splitBoxClass = isThisHandTurn ? 'split-hand-box split-hand-active' : 'split-hand-box';
+                    if (isBust) splitBoxClass += ' bust-card';
+
+                    let labelTitle = p.hands.length > 1 ? `<span>${p.username} <b style="color:#f59e0b;">(Hand ${hIdx + 1})</b></span>` : `<span>${p.username}</span>`;
 
                     let cardsHtml = '<div class="cards-container">';
                     if (room.gameStarted) {
                         hand.forEach((c, cIdx) => {
                             let cardEl = createCardUI(c, isBust && showAllDealer);
-                            cardEl.style.animationDelay = `${cIdx * 0.2}s`;
+                            cardEl.style.animationDelay = `${cIdx * 0.15}s`;
                             cardsHtml += cardEl.outerHTML;
                         });
                     }
                     cardsHtml += '</div>';
 
-                    let kickBtnHtml = (myData.isHost && !room.gameStarted) ? `<button onclick="kickPlayer('${p.username}')" style="background:#e74c3c; color:white; padding:3px 6px; font-size:9px; margin-top:2px; width:auto; border-radius:3px;">Kick</button>` : '';
-
-                    pList.innerHTML += `<div class="player-chip ${statusClass}">
-                        ${bjBadge}
-                        <div style="color:#f1c40f; font-size:11px; font-weight:bold;">👤 ${labelName}</div>
-                        <div style="color:#2ecc71; font-size:9px;">Saldo: ${formatNumber(p.balance)}</div>
-                        <div style="color:#ffffff; font-size:9px;">Skor: ${handScore} | Bet: ${formatNumber(p.bet)}</div>
-                        <div style="color:#38bdf8; font-size:9px;">${room.gameStarted ? p.statuses[hIdx] : (p.ready ? 'SIAP' : 'Menunggu')}</div>
-                        ${cardsHtml}
-                        ${kickBtnHtml}
-                    </div>`;
-
-                    if (room.gameStarted && p.socketId === socket.id && isCurrentTurnPlayer && room.currentTurnHandIndex === hIdx && p.statuses[hIdx] === 'playing') {
-                        isMyTurn = true;
-                    }
+                    handsHtml += `
+                        <div class="${splitBoxClass}">
+                            ${bjBadge}
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #e5e7eb; padding: 0 4px;">
+                                ${labelTitle}
+                                <span style="color: #38bdf8;">Skor: ${handScore}</span>
+                            </div>
+                            ${cardsHtml}
+                            <div style="font-size: 9px; color: #9ca3af; margin-top: 3px;">
+                                Status: <span style="color: #f59e0b; font-weight: 600;">${room.gameStarted ? p.statuses[hIdx] : (p.ready ? 'SIAP' : 'Menunggu')}</span>
+                            </div>
+                        </div>
+                    `;
                 });
+
+                let kickBtnHtml = (myData.isHost && !room.gameStarted) ? `<button onclick="kickPlayer('${p.username}')" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; padding:4px 8px; font-size:9px; margin-top:6px; width:auto; border-radius:4px;">Kick Pemain</button>` : '';
+
+                pList.innerHTML += `
+                    <div class="player-chip ${mainStatusClass}">
+                        <div style="font-size: 11px; font-weight: 700; color: #f1c40f; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>👤 ${p.username}</span>
+                            <span style="color: #10b981; font-size: 10px;">${formatNumber(p.balance)}</span>
+                        </div>
+                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 6px;">Taruhan: <b style="color:white;">${formatNumber(p.bet)}</b></div>
+                        ${handsHtml}
+                        ${kickBtnHtml}
+                    </div>
+                `;
             });
 
             let actionPanel = document.getElementById('action-panel');
             actionPanel.style.display = isMyTurn ? 'block' : 'none';
-            if (isMyTurn) document.getElementById('turn-notice').innerText = "⚡ Giliran Anda!";
+            if (isMyTurn) document.getElementById('turn-notice').innerText = "⚡ Giliran Anda untuk Memilih Aksi!";
         }
 
         function calculateScore(hand) {
