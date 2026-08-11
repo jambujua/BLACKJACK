@@ -35,10 +35,9 @@
             font-size: 13px; flex-wrap: wrap; gap: 8px; border: 1px solid #34495e;
         }
 
-        /* UI MEJA KOTAK PRESISI (Bukan Bulat) */
+        /* TEMA MEJA KOTAK PRESISI (Random Tema Dinamis) */
         .casino-table {
-            background: #0f172a;
-            border: 2px solid #334155; 
+            border: 2px solid rgba(255,255,255,0.2); 
             border-radius: 12px;
             padding: 15px; 
             margin-top: 5px;
@@ -46,11 +45,12 @@
             flex-direction: column; 
             gap: 15px;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            transition: background 0.5s ease;
         }
         
         .dealer-box-ui {
-            background: #1e293b;
-            border: 1px solid #475569;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 8px;
             padding: 10px;
             text-align: center;
@@ -88,7 +88,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 1px solid #fff; white-space: nowrap;
         }
 
-        .player-chip { background: #1e293b; padding: 10px; border-radius: 8px; border: 1px solid #475569; position: relative; font-size: 12px; text-align: center; }
+        .player-chip { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); position: relative; font-size: 12px; text-align: center; }
         .ready-true { border-color: #2ecc71; }
         .ready-false { border-color: #e74c3c; }
         .bust-card { opacity: 0.5; filter: grayscale(80%); }
@@ -148,8 +148,8 @@
                 <div><span>Saldo Anda:</span> <strong id="game-live-balance" style="color:#2ecc71;">0</strong></div>
             </div>
             
-            <!-- MEJA KOTAK PRESISI UTAMA -->
-            <div class="casino-table">
+            <!-- MEJA KOTAK PRESISI DENGAN TEMA RANDOM -->
+            <div class="casino-table" id="casino-table-theme">
                 <!-- Kotak Bandar -->
                 <div class="dealer-box-ui">
                     <div style="font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
@@ -221,6 +221,19 @@
         const API_URL = '/api';
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
 
+        // Daftar Tema Meja Random (Warna / Nuansa Kasino Berbeda)
+        const tableThemes = [
+            "linear-gradient(135deg, #064e3b 0%, #022c22 100%)", // Hijau Zamrud Kasino
+            "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)", // Biru Midnight Mewah
+            "linear-gradient(135deg, #581c87 0%, #3b0764 100%)", // Ungu Royal Eksklusif
+            "linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"  // Merah Marun Klasik
+        ];
+
+        function applyRandomTableTheme() {
+            let randomTheme = tableThemes[Math.floor(Math.random() * tableThemes.length)];
+            document.getElementById('casino-table-theme').style.background = randomTheme;
+        }
+
         function playBlackjackSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -255,6 +268,7 @@
             dot.className = 'signal-dot signal-green';
             text.innerText = 'Online';
 
+            // Auto Reconnect langsung masuk ke room tanpa login ulang jika ada sesi tersimpan
             let savedRoom = localStorage.getItem('bj_room');
             let savedUser = localStorage.getItem('bj_user');
             if (savedRoom && savedUser && !myData.roomId) {
@@ -322,11 +336,18 @@
         socket.on('room_joined', ({ roomId, isHost, hostUsername }) => {
             myData.roomId = roomId;
             myData.isHost = isHost;
+            
+            // Sembunyikan bagian login dan lobby secara total agar tidak bertumpuk saat reload
+            document.getElementById('auth-section').style.display = 'none';
             document.getElementById('lobby-section').style.display = 'none';
             document.getElementById('game-wrapper').style.display = 'block';
+            
             document.getElementById('current-room-lbl').innerText = roomId;
             document.getElementById('current-host-lbl').innerText = hostUsername;
             document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
+            
+            // Terapkan tema meja random saat masuk room
+            applyRandomTableTheme();
             
             if(myData.isHost) {
                 document.getElementById('host-controls').style.display = 'block';
