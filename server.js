@@ -31,9 +31,8 @@ const Player = mongoose.model('Player', playerSchema);
 const historySchema = new mongoose.Schema({
   username: { type: String, required: true },
   roomNumber: { type: String, required: true },
-  result: { type: String, enum: ['WIN', 'LOSE'], required: true },
+  result: { type: String, enum: ['WIN', 'LOSE', 'BLACKJACK', 'PUSH'], required: true },
   pointsChange: { type: Number, required: true },
-  durationMinutes: { type: Number, default: 0 },
   playedAt: { type: Date, default: Date.now }
 });
 const History = mongoose.model('History', historySchema);
@@ -64,58 +63,17 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.post('/api/request-topup', async (req, res) => {
+app.get('/api/rooms/active', (req, res) => {
   try {
-    const { username } = req.body;
-    await Player.findOneAndUpdate({ username }, { topupRequested: true }, { returnDocument: 'after' });
-    res.json({ success: true, message: "Permintaan koin berhasil dikirim ke Admin." });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/admin/all-players', async (req, res) => {
-  try {
-    const players = await Player.find().sort({ createdAt: -1 });
-    res.json(players);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/admin/acc-player', async (req, res) => {
-  try {
-    const { playerId } = req.body;
-    const player = await Player.findByIdAndUpdate(playerId, { status: 'active', balance: 100000, topupRequested: false }, { returnDocument: 'after' });
-    res.json({ success: true, message: `Akun ${player.username} di-ACC!`, player });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/admin/update-balance', async (req, res) => {
-  try {
-    const { username, newBalance } = req.body;
-    const player = await Player.findOneAndUpdate({ username }, { balance: Number(newBalance), topupRequested: false }, { returnDocument: 'after' });
-    res.json({ success: true, player });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/admin/delete-player/:id', async (req, res) => {
-  try {
-    await Player.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: "Akun dihapus." });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/history/save', async (req, res) => {
-  try {
-    await new History(req.body).save();
-    res.json({ success: true });
+    let activeRooms = [];
+    for (let rId in rooms) {
+      activeRooms.push({
+        roomId: rId,
+        hostUsername: rooms[rId].hostUsername,
+        playerCount: rooms[rId].players.length
+      });
+    }
+    res.json(activeRooms);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -125,7 +83,7 @@ app.get('/api/history', async (req, res) => {
   try {
     const { username } = req.query;
     let query = username ? { username } : {};
-    const histories = await History.find(query).sort({ playedAt: -1 }).limit(100);
+    const histories = await History.find(query).sort({ playedAt: -1 }).limit(20);
     res.json(histories);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -156,18 +114,18 @@ io.on('connection', (socket) => {
       dealerHand: [],
       deck: [],
       gameStarted: false,
-      endingGame: false,
       endGameAgrees: [],
       currentTurnPlayerIndex: 0,
       currentTurnHandIndex: 0,
       dealerDone: false,
+      hostDisconnectTimer: null,
       lastActivityTime: Date.now()
     };
     socket.join(roomId);
 
     rooms[roomId].players.push({
       socketId: socket.id, username, balance, bet: 0, ready: true,
-      hands: [], statuses: ['host'], splitCount: 0
+      hands: [], statuses: ['host'], splitCount: 0, notReadySince: null
     });
 
     socket.emit('room_joined', { roomId, isHost: true, hostUsername: username });
@@ -184,10 +142,12 @@ io.on('connection', (socket) => {
     let existingPlayer = room.players.find(p => p.username === username);
     if (existingPlayer) {
       existingPlayer.socketId = socket.id;
-      
-      // PERBAIKAN: Jika yang reconnect adalah Bandar, update hostSocketId agar sinkron!
       if (room.hostUsername === username) {
         room.hostSocketId = socket.id;
+        if (room.hostDisconnectTimer) {
+          clearTimeout(room.hostDisconnectTimer);
+          room.hostDisconnectTimer = null;
+        }
       }
 
       socket.join(roomId);
@@ -200,7 +160,7 @@ io.on('connection', (socket) => {
     socket.join(roomId);
     room.players.push({ 
       socketId: socket.id, username, balance, bet: 1000, ready: false, 
-      hands: [[]], statuses: ['waiting'], splitCount: 0 
+      hands: [[]], statuses: ['waiting'], splitCount: 0, notReadySince: Date.now()
     });
     room.lastActivityTime = Date.now();
     let isHost = (room.hostUsername === username);
@@ -217,6 +177,7 @@ io.on('connection', (socket) => {
       if (numericBet > 10000000) numericBet = 10000000;
       p.bet = numericBet;
       p.ready = Boolean(ready);
+      p.notReadySince = ready ? null : Date.now();
       room.lastActivityTime = Date.now();
     }
     io.to(roomId).emit('update_room_state', room);
@@ -229,7 +190,7 @@ io.on('connection', (socket) => {
     let targetPlayer = room.players.find(p => p.username === usernameToKick);
     if (targetPlayer) {
       savePlayerBalanceToDB(targetPlayer.username, targetPlayer.balance);
-      io.to(targetPlayer.socketId).emit('kicked_from_room', 'Anda telah dikeluarkan oleh Bandar karena tidak ada respons.');
+      io.to(targetPlayer.socketId).emit('kicked_from_room', 'Anda telah dikeluarkan oleh Bandar.');
       room.players = room.players.filter(p => p.username !== usernameToKick);
       io.to(roomId).emit('update_room_state', room);
     }
@@ -272,12 +233,19 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('update_room_state', room);
   });
 
+  // Validasi Ketat: Bandar hanya bisa mulai jika SEMUA pemain sudah Ready
   socket.on('start_game', (roomId) => {
     let room = rooms[roomId];
     if (room && room.hostSocketId === socket.id) {
       let bettingPlayers = room.players.filter(p => p.socketId !== room.hostSocketId);
       if (bettingPlayers.length === 0) {
         socket.emit('room_error', 'Tidak dapat mulai: Belum ada pemain lain di meja!');
+        return;
+      }
+      
+      let allReady = bettingPlayers.every(p => p.ready === true);
+      if (!allReady) {
+        socket.emit('room_error', 'Tidak dapat mulai: Masih ada pemain yang belum Ready!');
         return;
       }
       
@@ -294,6 +262,7 @@ io.on('connection', (socket) => {
           p.splitCount = 0;
           p.roundResults = [];
           p.ready = false; 
+          p.notReadySince = Date.now();
         }
       });
 
@@ -318,6 +287,7 @@ io.on('connection', (socket) => {
             p.balance -= Number(p.bet);
             if (hostPlayer) hostPlayer.balance += Number(p.bet);
             savePlayerBalanceToDB(p.username, p.balance);
+            recordHistory(p.username, roomId, 'LOSE', -Number(p.bet));
           }
         });
         if (hostPlayer) savePlayerBalanceToDB(hostPlayer.username, hostPlayer.balance);
@@ -342,20 +312,20 @@ io.on('connection', (socket) => {
       if (action === 'dealer_hit') {
         let currentDScore = calculateScore(room.dealerHand);
         if (currentDScore >= 17) {
-          socket.emit('room_error', 'Bandar sudah mencapai 17 atau lebih, tidak bisa Hit lagi!');
+          socket.emit('room_error', 'Bandar sudah mencapai 17 atau lebih!');
           return;
         }
         room.dealerHand.push(room.deck.pop());
         let newDScore = calculateScore(room.dealerHand);
         if (newDScore >= 17) {
           room.dealerDone = true;
-          evaluateHostRound(room);
+          evaluateHostRound(room, roomId);
         } else {
           io.to(roomId).emit('update_room_state', room);
         }
       } else if (action === 'dealer_stand') {
         room.dealerDone = true;
-        evaluateHostRound(room);
+        evaluateHostRound(room, roomId);
       }
       return;
     }
@@ -403,18 +373,55 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('receive_chat', { username, message });
   });
 
-  socket.on('disconnect', () => {});
+  // Fitur Bandar Offline Selama 1 Menit -> Game Berakhir Otomatis
+  socket.on('disconnect', () => {
+    for (let roomId in rooms) {
+      let room = rooms[roomId];
+      if (room && room.hostSocketId === socket.id) {
+        if (!room.hostDisconnectTimer) {
+          room.hostDisconnectTimer = setTimeout(() => {
+            if (rooms[roomId] && rooms[roomId].hostSocketId === socket.id) {
+              rooms[roomId].players.forEach(p => {
+                savePlayerBalanceToDB(p.username, p.balance);
+              });
+              io.to(roomId).emit('game_ended_permanently', 'Bandar offline selama 1 menit. Permainan diakhiri otomatis dan saldo tersimpan.');
+              delete rooms[roomId];
+            }
+          }, 60000); // 1 Menit
+        }
+      }
+    }
+  });
 });
 
+// Interval Pengecekan: Auto Kick pemain yang tidak Ready selama 40 detik
 setInterval(() => {
   const now = Date.now();
   for (let roomId in rooms) {
     let room = rooms[roomId];
-    if (room && !room.gameStarted && room.lastActivityTime && (now - room.lastActivityTime > 60000)) {
-      io.to(roomId).emit('inactive_timeout_warning', 'Meja tidak aktif selama 1 menit.');
+    if (room && !room.gameStarted) {
+      room.players.forEach(p => {
+        if (p.socketId !== room.hostSocketId && !p.ready) {
+          if (!p.notReadySince) p.notReadySince = now;
+          if (now - p.notReadySince > 40000) { // 40 Detik
+            savePlayerBalanceToDB(p.username, p.balance);
+            io.to(p.socketId).emit('kicked_from_room', 'Anda dikeluarkan otomatis karena tidak Ready selama 40 detik.');
+            room.players = room.players.filter(x => x.socketId !== p.socketId);
+            io.to(roomId).emit('update_room_state', room);
+          }
+        }
+      });
     }
   }
-}, 10000);
+}, 5000);
+
+async function recordHistory(username, roomNumber, result, pointsChange) {
+  try {
+    await new History({ username, roomNumber, result, pointsChange }).save();
+  } catch (e) {
+    console.error("Gagal simpan histori:", e.message);
+  }
+}
 
 function checkInitialPlayerStatus(room) {
   while (room.currentTurnPlayerIndex < room.players.length && room.players[room.currentTurnPlayerIndex].socketId === room.hostSocketId) {
@@ -496,7 +503,7 @@ function calculateScore(hand) {
   return score;
 }
 
-function evaluateHostRound(room) {
+function evaluateHostRound(room, roomId) {
   let dScore = calculateScore(room.dealerHand);
   let dealerBJ = room.dealerHand.length === 2 && dScore === 21;
   let hostPlayer = room.players.find(p => p.socketId === room.hostSocketId);
@@ -511,30 +518,37 @@ function evaluateHostRound(room) {
 
       if (dealerBJ) {
         if (pBJ) {
+          recordHistory(p.username, roomId, 'PUSH', 0);
           return 'PUSH';
         } else {
           p.balance -= betAmount;
           if (hostPlayer) hostPlayer.balance += betAmount;
+          recordHistory(p.username, roomId, 'LOSE', -betAmount);
           return 'LOSE';
         }
       } else if (p.statuses[idx] === 'bust' || pScore > 21) {
         p.balance -= betAmount;
         if (hostPlayer) hostPlayer.balance += betAmount;
+        recordHistory(p.username, roomId, 'LOSE', -betAmount);
         return 'LOSE';
       } else if (pBJ) {
         let winBonus = betAmount * 1; 
         p.balance += winBonus;
         if (hostPlayer) hostPlayer.balance -= winBonus;
+        recordHistory(p.username, roomId, 'BLACKJACK', winBonus);
         return 'BLACKJACK';
       } else if (dScore > 21 || pScore > dScore) {
         p.balance += betAmount; 
         if (hostPlayer) hostPlayer.balance -= betAmount;
+        recordHistory(p.username, roomId, 'WIN', betAmount);
         return 'WIN';
       } else if (pScore === dScore) {
+        recordHistory(p.username, roomId, 'PUSH', 0);
         return 'PUSH'; 
       } else {
         p.balance -= betAmount;
         if (hostPlayer) hostPlayer.balance += betAmount;
+        recordHistory(p.username, roomId, 'LOSE', -betAmount);
         return 'LOSE';
       }
     });
@@ -547,7 +561,6 @@ function evaluateHostRound(room) {
   }
 
   room.gameStarted = false;
-  let roomId = room.roomId || Object.keys(rooms).find(k => rooms[k] === room);
   io.to(roomId).emit('round_ended', room);
 }
 
