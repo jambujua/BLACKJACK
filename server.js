@@ -21,7 +21,7 @@ mongoose.connect(MONGO_URI)
 const playerSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  balance: { type: Number, default: 0 },
+  balance: { type: Number, default: 100000 }, // Saldo awal otomatis 100.000
   status: { type: String, enum: ['pending', 'active', 'banned'], default: 'pending' },
   topupRequested: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
@@ -43,9 +43,10 @@ app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
     const existing = await Player.findOne({ username });
     if (existing) return res.status(400).json({ message: "Username sudah digunakan!" });
-    const newPlayer = new Player({ username, password, balance: 0, status: 'pending', topupRequested: false });
+    
+    const newPlayer = new Player({ username, password, balance: 100000, status: 'pending', topupRequested: false });
     await newPlayer.save();
-    res.json({ success: true, message: "Pendaftaran berhasil! Tunggu ACC Admin." });
+    res.json({ success: true, message: "Pendaftaran berhasil! Anda mendapatkan bonus saldo awal 100.000. Tunggu ACC Admin." });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
