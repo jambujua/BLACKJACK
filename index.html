@@ -28,15 +28,6 @@
         .signal-green { background-color: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
         .signal-red { background-color: #e74c3c; box-shadow: 0 0 6px #e74c3c; }
 
-        /* Peringatan Orientasi Landscape untuk HP */
-        #orientation-warning {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #111; z-index: 99999; color: #f1c40f; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center;
-        }
-        @media screen and (max-width: 900px) and (orientation: portrait) {
-            #orientation-warning { display: flex; }
-        }
-
         .room-header-bar {
             background: #1e272e; padding: 8px 12px; border-radius: 6px;
             display: flex; justify-content: space-between; align-items: center;
@@ -44,7 +35,6 @@
             font-size: 12px; flex-wrap: wrap; gap: 8px; border: 1px solid #34495e;
         }
 
-        /* TEMA MEJA KOMPAK & GRID PRESISI */
         .casino-table {
             border: 2px solid rgba(255,255,255,0.2); 
             border-radius: 10px;
@@ -65,14 +55,12 @@
             text-align: center;
         }
 
-        /* Grid Kompak untuk muat lebih banyak pemain per baris */
         .players-box-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 8px;
         }
 
-        /* Kartu Saling Tumpang Tindih Agar Hemat Ruang */
         .cards-container { 
             display: flex; justify-content: center; 
             min-height: 55px; margin-top: 4px; 
@@ -86,7 +74,6 @@
             opacity: 0;
             animation: cardDrop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        /* Efek Tumpang Tindih (Overlap) Kartu */
         .card:not(:first-child) {
             margin-left: -15px; 
         }
@@ -124,12 +111,6 @@
     </style>
 </head>
 <body>
-
-    <!-- Peringatan Putar Layar HP -->
-    <div id="orientation-warning">
-        <h2>📱 Putar HP Anda ke Posisi Lanskap (Horizontal)</h2>
-        <p>Game ini dirancang optimal dalam tampilan mendatar agar tombol kontrol kasino terlihat sempurna.</p>
-    </div>
 
     <div id="signal-indicator">
         <div id="signal-dot" class="signal-dot signal-red"></div>
@@ -174,23 +155,19 @@
                 <div><span>Saldo Anda:</span> <strong id="game-live-balance" style="color:#2ecc71;">0</strong></div>
             </div>
             
-            <!-- MEJA KOTAK PRESISI DENGAN TEMA RANDOM -->
             <div class="casino-table" id="casino-table-theme">
-                <!-- Kotak Bandar -->
                 <div class="dealer-box-ui">
                     <div style="font-size:12px; font-weight:bold; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
                     <div style="font-size:10px; color:#cbd5e1;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
                     <div class="cards-container" id="dealer-cards"></div>
                 </div>
 
-                <!-- Kotak Grid Pemain Kompak -->
                 <div>
                     <div style="font-size:11px; font-weight:bold; color:#38bdf8; margin-bottom:4px; text-align:left;">👥 MEJA PEMAIN</div>
                     <div class="players-box-grid" id="room-players-list"></div>
                 </div>
             </div>
 
-            <!-- PANEL KONTROL & SIAP -->
             <div id="control-panel" style="background:#1e272e; padding:8px; border-radius:8px; margin-top:8px; border: 1px solid #34495e;">
                 <div id="betting-controls">
                     <label style="font-size:11px;">Taruhan (Max 10 Juta):</label><br>
@@ -213,7 +190,6 @@
                 </div>
             </div>
 
-            <!-- TOMBOL AKSI PEMAIN -->
             <div id="action-panel" style="display:none; margin-top:8px;">
                 <p id="turn-notice" style="color:#f1c40f; font-weight:bold; font-size:11px; margin-bottom:4px;"></p>
                 <div style="display:flex; gap:4px; justify-content:center;">
@@ -224,7 +200,6 @@
                 </div>
             </div>
 
-            <!-- CHAT & HISTORY -->
             <div class="room-panel" style="margin-top:8px;">
                 <div class="panel-card" style="padding:8px; max-width: 100%;">
                     <h3 style="margin:0 0 4px 0; font-size:12px;">📊 Status Ronde</h3>
@@ -248,10 +223,10 @@
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
 
         const tableThemes = [
-            "linear-gradient(135deg, #064e3b 0%, #022c22 100%)", // Hijau Kasino
-            "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)", // Biru Midnight
-            "linear-gradient(135deg, #581c87 0%, #3b0764 100%)", // Ungu Royal
-            "linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"  // Merah Marun
+            "linear-gradient(135deg, #064e3b 0%, #022c22 100%)",
+            "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)",
+            "linear-gradient(135deg, #581c87 0%, #3b0764 100%)",
+            "linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"
         ];
 
         function applyRandomTableTheme() {
@@ -287,7 +262,6 @@
             return Number(num || 0).toLocaleString('id-ID');
         }
 
-        // PERBAIKAN LOGIKA RECONNECT
         socket.on('connect', () => {
             let dot = document.getElementById('signal-dot');
             let text = document.getElementById('signal-text');
@@ -299,37 +273,28 @@
 
             if (savedUser) {
                 myData.username = savedUser;
-                // Lewati tampilan login karena sesi masih aktif
                 document.getElementById('auth-section').style.display = 'none';
                 document.getElementById('lbl-username').innerText = myData.username;
                 
                 if (savedRoom && !myData.roomId) {
-                    // Coba otomatis masuk kembali ke meja permainan
                     document.getElementById('lobby-section').style.display = 'none';
                     socket.emit('join_room', { roomId: savedRoom, username: savedUser, balance: myData.balance });
                 } else {
-                    // Jika tidak ada room tersimpan, tampilkan Lobby
                     document.getElementById('lobby-section').style.display = 'block';
                     document.getElementById('game-wrapper').style.display = 'none';
                 }
             } else {
-                // Jika tidak ada user login, kembalikan ke Auth
                 document.getElementById('auth-section').style.display = 'block';
                 document.getElementById('lobby-section').style.display = 'none';
                 document.getElementById('game-wrapper').style.display = 'none';
             }
         });
 
-        // PERBAIKAN HANDLING ROOM ERROR AGAR TIDAK STUCK (NGE-BLANK)
         socket.on('room_error', (msg) => { 
             alert(msg); 
             document.getElementById('lobby-msg').innerText = msg; 
-            
-            // Hapus data room yang salah/hilang dari local storage
             localStorage.removeItem('bj_room');
             myData.roomId = '';
-            
-            // Tutup halaman game dan kembalikan ke Lobby atau Auth
             document.getElementById('game-wrapper').style.display = 'none';
             if (localStorage.getItem('bj_user')) {
                 document.getElementById('lobby-section').style.display = 'block';
