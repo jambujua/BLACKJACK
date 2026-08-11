@@ -256,6 +256,12 @@
                     <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:140px; display:inline-block; padding:6px;">
                     <button onclick="toggleReady()" id="ready-btn" style="max-width:140px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; display:inline-block; padding:7px;">SIAP (Ready)</button>
                 </div>
+
+                <!-- Panel Topup Otomatis Jika Hutang Mencapai -10 Juta -->
+                <div id="topup-panel" style="display:none; text-align:center; padding:5px;">
+                    <p style="color:#ef4444; font-size:11px; margin:0 0 6px 0;"><b>⚠️ BATAS HUTANG MAKSIMAL (-10 Juta) TERCAPAI!</b></p>
+                    <button onclick="sendTopupRequest()" style="background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color:white; max-width:220px; padding:8px; font-size:11px;">Minta Saldo (Request Topup)</button>
+                </div>
                 
                 <div id="host-controls" style="margin-top:6px; display:none;">
                     <button onclick="startGame()" id="start-game-btn" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; max-width:160px; display:inline-block; padding:7px;">Mulai Kartu</button>
@@ -272,7 +278,7 @@
                 </div>
             </div>
 
-            <!-- TOMBOL AKSI PEMAIN (Tombol Split kini otomatis tampil/sembunyi sesuai ketentuan kartu kembar) -->
+            <!-- TOMBOL AKSI PEMAIN -->
             <div id="action-panel" style="display:none; margin-top:10px;">
                 <p id="turn-notice" style="color:#f59e0b; font-weight:700; font-size:12px; margin-bottom:5px;"></p>
                 <div style="display:flex; gap:6px; justify-content:center;">
@@ -671,6 +677,11 @@
             socket.emit('set_ready', { roomId: myData.roomId, bet, ready: myData.isReady });
         }
 
+        function sendTopupRequest() {
+            socket.emit('request_topup', { username: myData.username });
+            alert("Permintaan Topup telah dikirim ke Admin!");
+        }
+
         function requestEndGame() {
             myData.hasAgreedEnd = true;
             let btn = document.getElementById('end-game-btn');
@@ -720,7 +731,6 @@
                 document.getElementById('host-force-end-btn').style.display = 'inline-block';
             } else {
                 document.getElementById('host-controls').style.display = 'none';
-                document.getElementById('betting-controls').style.display = 'block';
                 document.getElementById('host-force-end-btn').style.display = 'none';
             }
             
@@ -728,6 +738,17 @@
             if (me) {
                 myData.balance = me.balance;
                 document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
+                
+                // Cek batas hutang maksimal (-10 Juta)
+                let bettingControls = document.getElementById('betting-controls');
+                let topupPanel = document.getElementById('topup-panel');
+                if (me.balance <= -10000000 && !myData.isHost) {
+                    bettingControls.style.display = 'none';
+                    topupPanel.style.display = 'block';
+                } else if (!myData.isHost) {
+                    bettingControls.style.display = 'block';
+                    topupPanel.style.display = 'none';
+                }
             }
 
             if (room.endGameAgrees) {
@@ -760,7 +781,7 @@
         socket.on('round_ended', (room) => {
             window.currentRoomState = room;
             document.getElementById('action-panel').style.display = 'none';
-            if(!myData.isHost) document.getElementById('betting-controls').style.display = 'block';
+            if(!myData.isHost && myData.balance > -10000000) document.getElementById('betting-controls').style.display = 'block';
             myData.isReady = false;
             let btn = document.getElementById('ready-btn');
             if(btn) { btn.innerText = "SIAP (Ready)"; btn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)"; }
@@ -774,7 +795,7 @@
             let winnerNames = [];
             let summary = room.players.filter(p => p.socketId !== room.hostSocketId).map(p => {
                 let resStr = p.roundResults ? p.roundResults.join(' & ') : '';
-                if (resStr.includes('BLACKJACK') || resStr.includes('WIN')) {
+                if (resStr.includes('WIN')) {
                     playBlackjackSound();
                     winnerNames.push(p.username);
                 }
@@ -871,12 +892,13 @@
                 });
 
                 let kickBtnHtml = (myData.isHost && !room.gameStarted) ? `<button onclick="kickPlayer('${p.username}')" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; padding:4px 8px; font-size:9px; margin-top:6px; width:auto; border-radius:4px;">Kick Pemain</button>` : '';
+                let balanceColor = p.balance < 0 ? '#ef4444' : '#10b981';
 
                 pList.innerHTML += `
                     <div class="player-chip ${mainStatusClass}">
                         <div style="font-size: 11px; font-weight: 700; color: #f1c40f; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
                             <span>👤 ${p.username}</span>
-                            <span style="color: #10b981; font-size: 10px;">🪙 ${formatNumber(p.balance)}</span>
+                            <span style="color: ${balanceColor}; font-size: 10px;">🪙 ${formatNumber(p.balance)}</span>
                         </div>
                         <div style="font-size: 9px; color: #9ca3af; margin-bottom: 6px;">Taruhan: <b style="color:white;">🪙 ${formatNumber(p.bet)}</b></div>
                         ${handsHtml}
@@ -885,13 +907,11 @@
                 `;
             });
 
-            // TOMBOL AKSI HANYA MUNCUL DI LAYAR PEMAIN YANG GILIRANNYA SAJA
             let actionPanel = document.getElementById('action-panel');
             actionPanel.style.display = isMyTurn ? 'block' : 'none';
             if (isMyTurn) {
                 document.getElementById('turn-notice').innerText = "⚡ Giliran Anda untuk Memilih Aksi!";
                 
-                // Evaluasi apakah tombol Split boleh dimunculkan (syarat: tepat 2 kartu di hand aktif dengan nilai yang sama dan splitCount < 4)
                 let canSplit = false;
                 let currentHand = activePlayer.hands[currentHandIdx];
                 if (currentHand && currentHand.length === 2 && activePlayer.splitCount < 4) {
