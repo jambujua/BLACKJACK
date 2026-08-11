@@ -153,6 +153,9 @@ io.on('connection', (socket) => {
       socket.join(roomId);
       let isHost = (room.hostUsername === username);
       socket.emit('room_joined', { roomId, isHost, hostUsername: room.hostUsername });
+      
+      // Beritahu peer lain di room untuk WebRTC voice chat
+      socket.to(roomId).emit('peer_joined', { peerId: socket.id });
       socket.emit('update_room_state', room);
       return;
     }
@@ -165,7 +168,22 @@ io.on('connection', (socket) => {
     room.lastActivityTime = Date.now();
     let isHost = (room.hostUsername === username);
     socket.emit('room_joined', { roomId, isHost, hostUsername: room.hostUsername });
+    
+    socket.to(roomId).emit('peer_joined', { peerId: socket.id });
     io.to(roomId).emit('update_room_state', room);
+  });
+
+  // WebRTC Signaling Relay
+  socket.on('webrtc_offer', ({ target, offer }) => {
+    io.to(target).emit('webrtc_offer', { sender: socket.id, offer });
+  });
+
+  socket.on('webrtc_answer', ({ target, answer }) => {
+    io.to(target).emit('webrtc_answer', { sender: socket.id, answer });
+  });
+
+  socket.on('webrtc_ice_candidate', ({ target, candidate }) => {
+    io.to(target).emit('webrtc_ice_candidate', { sender: socket.id, candidate });
   });
 
   socket.on('set_ready', ({ roomId, bet, ready }) => {
@@ -233,7 +251,6 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('update_room_state', room);
   });
 
-  // Validasi Ketat: Bandar hanya bisa mulai jika SEMUA pemain sudah Ready
   socket.on('start_game', (roomId) => {
     let room = rooms[roomId];
     if (room && room.hostSocketId === socket.id) {
@@ -373,7 +390,6 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('receive_chat', { username, message });
   });
 
-  // Fitur Bandar Offline Selama 1 Menit -> Game Berakhir Otomatis
   socket.on('disconnect', () => {
     for (let roomId in rooms) {
       let room = rooms[roomId];
@@ -384,17 +400,17 @@ io.on('connection', (socket) => {
               rooms[roomId].players.forEach(p => {
                 savePlayerBalanceToDB(p.username, p.balance);
               });
-              io.to(roomId).emit('game_ended_permanently', 'Bandar offline selama 1 menit. Permainan diakhiri otomatis dan saldo tersimpan.');
+              io.to(roomId).emit('game_ended_permanently', 'Bandar offline selama 1 menit. Permainan diakhiri otomatis.');
               delete rooms[roomId];
             }
-          }, 60000); // 1 Menit
+          }, 60000);
         }
       }
     }
+    socket.broadcast.emit('peer_disconnected', { peerId: socket.id });
   });
 });
 
-// Interval Pengecekan: Auto Kick pemain yang tidak Ready selama 40 detik
 setInterval(() => {
   const now = Date.now();
   for (let roomId in rooms) {
@@ -403,7 +419,7 @@ setInterval(() => {
       room.players.forEach(p => {
         if (p.socketId !== room.hostSocketId && !p.ready) {
           if (!p.notReadySince) p.notReadySince = now;
-          if (now - p.notReadySince > 40000) { // 40 Detik
+          if (now - p.notReadySince > 40000) {
             savePlayerBalanceToDB(p.username, p.balance);
             io.to(p.socketId).emit('kicked_from_room', 'Anda dikeluarkan otomatis karena tidak Ready selama 40 detik.');
             room.players = room.players.filter(x => x.socketId !== p.socketId);
@@ -539,7 +555,7 @@ function evaluateHostRound(room, roomId) {
         return 'BLACKJACK';
       } else if (dScore > 21 || pScore > dScore) {
         p.balance += betAmount; 
-        if (hostPlayer) hostPlayer.balance -= betAmount;
+        if (hostPlayer) hostPlayer.balance -= winBonus;
         recordHistory(p.username, roomId, 'WIN', betAmount);
         return 'WIN';
       } else if (pScore === dScore) {
