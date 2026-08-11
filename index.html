@@ -8,19 +8,19 @@
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: white; text-align: center; margin: 0; padding: 10px; }
         .container { max-width: 1000px; margin: 0 auto; }
-        .card-box { background-color: #1e272e; padding: 20px; border-radius: 8px; max-width: 380px; margin: 30px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.7); text-align: left; border: 1px solid #34495e; }
-        .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 20px; }
+        .card-box { background-color: #1e272e; padding: 15px; border-radius: 8px; max-width: 380px; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.7); text-align: left; border: 1px solid #34495e; }
+        .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 18px; }
         .form-group { margin-bottom: 10px; }
-        input, select { width: 100%; box-sizing: border-box; padding: 8px; border-radius: 5px; border: 1px solid #444; background: #1a1a1a; color: white; margin-top: 4px; }
-        button { padding: 9px; font-size: 14px; border-radius: 5px; border: none; background-color: #f1c40f; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; color: black; }
+        input, select { width: 100%; box-sizing: border-box; padding: 6px; border-radius: 5px; border: 1px solid #444; background: #1a1a1a; color: white; margin-top: 4px; font-size:13px; }
+        button { padding: 8px; font-size: 13px; border-radius: 5px; border: none; background-color: #f1c40f; font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px; color: black; }
         button:hover { background-color: #f39c12; }
         
         #lobby-section, #game-wrapper { display: none; }
-        .room-panel { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
-        .panel-card { background: #1e272e; padding: 15px; border-radius: 8px; width: 100%; max-width: 340px; text-align: left; box-sizing: border-box; border: 1px solid #34495e; }
+        .room-panel { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+        .panel-card { background: #1e272e; padding: 12px; border-radius: 8px; width: 100%; max-width: 320px; text-align: left; box-sizing: border-box; border: 1px solid #34495e; }
 
         #signal-indicator {
-            position: fixed; top: 8px; left: 8px; display: flex; align-items: center; gap: 6px;
+            position: fixed; top: 6px; left: 6px; display: flex; align-items: center; gap: 6px;
             background: rgba(0, 0, 0, 0.8); padding: 4px 10px; border-radius: 20px; font-size: 11px; z-index: 9999;
             border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);
         }
@@ -28,67 +28,87 @@
         .signal-green { background-color: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
         .signal-red { background-color: #e74c3c; box-shadow: 0 0 6px #e74c3c; }
 
-        .room-header-bar {
-            background: #1e272e; padding: 10px 15px; border-radius: 6px;
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; border-left: 4px solid #f1c40f; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            font-size: 13px; flex-wrap: wrap; gap: 8px; border: 1px solid #34495e;
+        /* Peringatan Orientasi Landscape untuk HP */
+        #orientation-warning {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #111; z-index: 99999; color: #f1c40f; justify-content: center; align-items: center; flex-direction: column; padding: 20px; text-align: center;
+        }
+        @media screen and (max-width: 900px) and (orientation: portrait) {
+            #orientation-warning { display: flex; }
         }
 
-        /* TEMA MEJA KOTAK PRESISI (Random Tema Dinamis) */
+        .room-header-bar {
+            background: #1e272e; padding: 8px 12px; border-radius: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; border-left: 4px solid #f1c40f; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            font-size: 12px; flex-wrap: wrap; gap: 8px; border: 1px solid #34495e;
+        }
+
+        /* TEMA MEJA KOMPAK & GRID PRESISI */
         .casino-table {
             border: 2px solid rgba(255,255,255,0.2); 
-            border-radius: 12px;
-            padding: 15px; 
+            border-radius: 10px;
+            padding: 10px; 
             margin-top: 5px;
             display: flex; 
             flex-direction: column; 
-            gap: 15px;
+            gap: 10px;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
             transition: background 0.5s ease;
         }
         
         .dealer-box-ui {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
         }
 
+        /* Grid Kompak untuk muat lebih banyak pemain per baris */
         .players-box-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
         }
 
-        .cards-container { display: flex; justify-content: center; min-height: 75px; margin-top: 6px; gap: 4px; perspective: 1000px; }
-        @keyframes cardDrop {
-            0% { transform: translateY(-100px) scale(0.2); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
+        /* Kartu Saling Tumpang Tindih Agar Hemat Ruang */
+        .cards-container { 
+            display: flex; justify-content: center; 
+            min-height: 55px; margin-top: 4px; 
+            perspective: 1000px; 
         }
         .card {
-            background-color: #ffffff; color: #222222; width: 44px; height: 68px; border-radius: 5px;
+            background-color: #ffffff; color: #222222; width: 36px; height: 54px; border-radius: 4px;
             display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: 3px; font-size: 12px; font-weight: bold; box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+            padding: 2px; font-size: 10px; font-weight: bold; box-shadow: -2px 2px 5px rgba(0,0,0,0.6);
             border: 1px solid #bbb; position: relative; user-select: none;
             opacity: 0;
             animation: cardDrop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .card-top { align-self: flex-start; font-size: 10px; line-height: 1; }
-        .card-center { font-size: 15px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .card-bottom { align-self: flex-end; font-size: 10px; line-height: 1; transform: rotate(180deg); }
-        .red-suit { color: #d63031 !important; }
-        .closed-card { background: repeating-linear-gradient(45deg, #1e3799, #1e3799 6px, #0984e3 6px, #0984e3 12px); color: transparent; border: 1px solid #fff; }
-
-        .bj-badge {
-            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(135deg, #f1c40f, #e67e22); color: white;
-            padding: 2px 6px; font-size: 10px; font-weight: bold; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 1px solid #fff; white-space: nowrap;
+        /* Efek Tumpang Tindih (Overlap) Kartu */
+        .card:not(:first-child) {
+            margin-left: -15px; 
         }
 
-        .player-chip { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); position: relative; font-size: 12px; text-align: center; }
+        @keyframes cardDrop {
+            0% { transform: translateY(-80px) scale(0.4); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .card-top { align-self: flex-start; font-size: 9px; line-height: 1; }
+        .card-center { font-size: 14px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .card-bottom { align-self: flex-end; font-size: 9px; line-height: 1; transform: rotate(180deg); }
+        .red-suit { color: #d63031 !important; }
+        .closed-card { background: repeating-linear-gradient(45deg, #1e3799, #1e3799 5px, #0984e3 5px, #0984e3 10px); color: transparent; border: 1px solid #fff; }
+
+        .bj-badge {
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f1c40f, #e67e22); color: white;
+            padding: 2px 5px; font-size: 9px; font-weight: bold; border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #fff; white-space: nowrap;
+        }
+
+        .player-chip { background: rgba(0,0,0,0.5); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); position: relative; font-size: 11px; text-align: center; }
         .ready-true { border-color: #2ecc71; }
         .ready-false { border-color: #e74c3c; }
         .bust-card { opacity: 0.5; filter: grayscale(80%); }
@@ -100,10 +120,16 @@
         }
         .turn-active { border-color: #f1c40f !important; animation: turnGlow 1.2s infinite; }
 
-        .chat-box { background: #111827; padding: 8px; border-radius: 6px; height: 95px; overflow-y: auto; font-size: 11px; text-align: left; margin-bottom: 6px; border: 1px solid #374151; }
+        .chat-box { background: #111827; padding: 6px; border-radius: 6px; height: 70px; overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 4px; border: 1px solid #374151; }
     </style>
 </head>
 <body>
+
+    <!-- Peringatan Putar Layar HP -->
+    <div id="orientation-warning">
+        <h2>📱 Putar HP Anda ke Posisi Lanskap (Horizontal)</h2>
+        <p>Game ini dirancang optimal dalam tampilan mendatar agar tombol kontrol kasino terlihat sempurna.</p>
+    </div>
 
     <div id="signal-indicator">
         <div id="signal-dot" class="signal-dot signal-red"></div>
@@ -118,26 +144,26 @@
             <div class="form-group"><label>Password:</label><input type="password" id="password"></div>
             <button onclick="loginUser()">Masuk (Login)</button>
             <button onclick="registerUser()" style="background:#3498db; color:white;">Daftar Akun Baru</button>
-            <div id="auth-msg" style="color:#e74c3c; margin-top:8px; text-align:center; font-weight:bold; font-size:12px;"></div>
+            <div id="auth-msg" style="color:#e74c3c; margin-top:8px; text-align:center; font-weight:bold; font-size:11px;"></div>
         </div>
 
         <!-- LOBBY ROOM SECTION -->
         <div id="lobby-section">
             <h2>Selamat Datang, <span id="lbl-username" style="color:#f1c40f;"></span>!</h2>
-            <p style="font-size:13px;">Saldo Poin: <span id="lbl-balance" style="color:#2ecc71; font-weight:bold;">0</span></p>
+            <p style="font-size:12px;">Saldo Poin: <span id="lbl-balance" style="color:#2ecc71; font-weight:bold;">0</span></p>
             <div class="room-panel">
                 <div class="panel-card">
-                    <h3>Buat Room Baru</h3>
-                    <label>ID Room:</label><input type="text" id="create-room-id" placeholder="Contoh: room17">
+                    <h3 style="font-size: 14px; margin-top:0;">Buat Room Baru</h3>
+                    <label style="font-size:11px;">ID Room:</label><input type="text" id="create-room-id" placeholder="Contoh: room17">
                     <button onclick="createRoom()">Buat Room (Bandar)</button>
                 </div>
                 <div class="panel-card">
-                    <h3>Gabung Room</h3>
-                    <label>ID Room:</label><input type="text" id="join-room-id" placeholder="ID Room teman">
+                    <h3 style="font-size: 14px; margin-top:0;">Gabung Room</h3>
+                    <label style="font-size:11px;">ID Room:</label><input type="text" id="join-room-id" placeholder="ID Room teman">
                     <button onclick="joinRoom()" style="background:#2ecc71;">Gabung (Pemain)</button>
                 </div>
             </div>
-            <div id="lobby-msg" style="color:#e74c3c; margin-top:10px; font-weight:bold; font-size:12px;"></div>
+            <div id="lobby-msg" style="color:#e74c3c; margin-top:10px; font-weight:bold; font-size:11px;"></div>
         </div>
 
         <!-- GAME ROOM SECTION -->
@@ -152,64 +178,64 @@
             <div class="casino-table" id="casino-table-theme">
                 <!-- Kotak Bandar -->
                 <div class="dealer-box-ui">
-                    <div style="font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
-                    <div style="font-size:11px; color:#cbd5e1;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
+                    <div style="font-size:12px; font-weight:bold; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
+                    <div style="font-size:10px; color:#cbd5e1;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
                     <div class="cards-container" id="dealer-cards"></div>
                 </div>
 
-                <!-- Kotak Grid Pemain -->
+                <!-- Kotak Grid Pemain Kompak -->
                 <div>
-                    <div style="font-size:12px; font-weight:bold; color:#38bdf8; margin-bottom:6px; text-align:left;">👥 MEJA PEMAIN</div>
+                    <div style="font-size:11px; font-weight:bold; color:#38bdf8; margin-bottom:4px; text-align:left;">👥 MEJA PEMAIN</div>
                     <div class="players-box-grid" id="room-players-list"></div>
                 </div>
             </div>
 
             <!-- PANEL KONTROL & SIAP -->
-            <div id="control-panel" style="background:#1e272e; padding:10px; border-radius:8px; margin-top:10px; border: 1px solid #34495e;">
+            <div id="control-panel" style="background:#1e272e; padding:8px; border-radius:8px; margin-top:8px; border: 1px solid #34495e;">
                 <div id="betting-controls">
-                    <label style="font-size:12px;">Taruhan (Max 10 Juta):</label><br>
-                    <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:140px; display:inline-block;">
-                    <button onclick="toggleReady()" id="ready-btn" style="max-width:140px; background:#2ecc71; color:white; display:inline-block;">SIAP (Ready)</button>
+                    <label style="font-size:11px;">Taruhan (Max 10 Juta):</label><br>
+                    <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:120px; display:inline-block; padding:4px;">
+                    <button onclick="toggleReady()" id="ready-btn" style="max-width:120px; background:#2ecc71; color:white; display:inline-block; padding:5px;">SIAP (Ready)</button>
                 </div>
                 
-                <div id="host-controls" style="margin-top:8px; display:none;">
-                    <button onclick="startGame()" id="start-game-btn" style="background:#f1c40f; color:black; max-width:170px; display:inline-block;">Mulai Kartu</button>
+                <div id="host-controls" style="margin-top:6px; display:none;">
+                    <button onclick="startGame()" id="start-game-btn" style="background:#f1c40f; color:black; max-width:150px; display:inline-block; padding:6px;">Mulai Kartu</button>
                     <div id="host-dealer-action-btns" style="display:none; margin-top:4px;">
-                        <button onclick="dealerHit()" id="dealer-hit-btn" style="background:#3498db; color:white; max-width:130px; display:inline-block;">Bandar Hit</button>
-                        <button onclick="dealerStand()" id="dealer-stand-btn" style="background:#e74c3c; color:white; max-width:130px; display:inline-block;">Bandar Stand</button>
+                        <button onclick="dealerHit()" id="dealer-hit-btn" style="background:#3498db; color:white; max-width:110px; display:inline-block; padding:6px;">Bandar Hit</button>
+                        <button onclick="dealerStand()" id="dealer-stand-btn" style="background:#e74c3c; color:white; max-width:110px; display:inline-block; padding:6px;">Bandar Stand</button>
                     </div>
                 </div>
 
-                <div style="margin-top: 8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                    <button onclick="requestEndGame()" id="end-game-btn" style="background:#c0392b; color:white; max-width:170px; font-size:12px;">Akhiri Game (Setuju)</button>
-                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:#e67e22; color:white; max-width:190px; display:none; font-size:12px;">Paksa Akhiri (Inaktif)</button>
-                    <span id="end-game-status" style="font-size:11px; color:#f1c40f; display:block; width:100%; margin-top:2px;"></span>
+                <div style="margin-top: 6px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                    <button onclick="requestEndGame()" id="end-game-btn" style="background:#c0392b; color:white; max-width:140px; font-size:11px; padding:6px;">Akhiri Game</button>
+                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:#e67e22; color:white; max-width:160px; display:none; font-size:11px; padding:6px;">Paksa Akhiri (Inaktif)</button>
+                    <span id="end-game-status" style="font-size:10px; color:#f1c40f; display:block; width:100%; margin-top:2px;"></span>
                 </div>
             </div>
 
             <!-- TOMBOL AKSI PEMAIN -->
-            <div id="action-panel" style="display:none; margin-top:10px;">
-                <p id="turn-notice" style="color:#f1c40f; font-weight:bold; font-size:12px; margin-bottom:4px;"></p>
-                <div style="display:flex; gap:6px; justify-content:center;">
-                    <button onclick="sendAction('hit')" style="background:#3498db; color:white; width:65px; margin:0;">Hit</button>
-                    <button onclick="sendAction('stand')" style="background:#e74c3c; color:white; width:65px; margin:0;">Stand</button>
-                    <button onclick="sendAction('double')" style="background:#2ecc71; color:white; width:65px; margin:0;">Double</button>
-                    <button onclick="sendAction('split')" style="background:#9b59b6; color:white; width:65px; margin:0;">Split</button>
+            <div id="action-panel" style="display:none; margin-top:8px;">
+                <p id="turn-notice" style="color:#f1c40f; font-weight:bold; font-size:11px; margin-bottom:4px;"></p>
+                <div style="display:flex; gap:4px; justify-content:center;">
+                    <button onclick="sendAction('hit')" style="background:#3498db; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Hit</button>
+                    <button onclick="sendAction('stand')" style="background:#e74c3c; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Stand</button>
+                    <button onclick="sendAction('double')" style="background:#2ecc71; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Double</button>
+                    <button onclick="sendAction('split')" style="background:#9b59b6; color:white; width:55px; margin:0; padding:6px; font-size:11px;">Split</button>
                 </div>
             </div>
 
             <!-- CHAT & HISTORY -->
-            <div class="room-panel" style="margin-top:10px;">
-                <div class="panel-card" style="padding:10px; max-width: 100%;">
-                    <h3 style="margin:0 0 5px 0; font-size:13px;">📊 Status Ronde</h3>
-                    <p id="round-status-text" style="color:#f1c40f; font-weight:bold; font-size:11px; margin:0;">Menunggu pemain siap...</p>
+            <div class="room-panel" style="margin-top:8px;">
+                <div class="panel-card" style="padding:8px; max-width: 100%;">
+                    <h3 style="margin:0 0 4px 0; font-size:12px;">📊 Status Ronde</h3>
+                    <p id="round-status-text" style="color:#f1c40f; font-weight:bold; font-size:10px; margin:0;">Menunggu pemain siap...</p>
                 </div>
-                <div class="panel-card" style="padding:10px; max-width: 100%;">
-                    <h3 style="margin:0 0 5px 0; font-size:13px;">💬 Chat Room</h3>
+                <div class="panel-card" style="padding:8px; max-width: 100%;">
+                    <h3 style="margin:0 0 4px 0; font-size:12px;">💬 Chat Room</h3>
                     <div class="chat-box" id="chat-messages"></div>
                     <div style="display:flex; gap:4px;">
-                        <input type="text" id="chat-input" placeholder="Pesan..." onkeypress="checkEnter(event)" style="margin:0; font-size:12px; padding:6px;">
-                        <button onclick="sendChat()" style="width:55px; margin:0; padding:6px; font-size:12px;">Kirim</button>
+                        <input type="text" id="chat-input" placeholder="Pesan..." onkeypress="checkEnter(event)" style="margin:0; font-size:11px; padding:4px;">
+                        <button onclick="sendChat()" style="width:50px; margin:0; padding:4px; font-size:11px;">Kirim</button>
                     </div>
                 </div>
             </div>
@@ -221,12 +247,11 @@
         const API_URL = '/api';
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
 
-        // Daftar Tema Meja Random (Warna / Nuansa Kasino Berbeda)
         const tableThemes = [
-            "linear-gradient(135deg, #064e3b 0%, #022c22 100%)", // Hijau Zamrud Kasino
-            "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)", // Biru Midnight Mewah
-            "linear-gradient(135deg, #581c87 0%, #3b0764 100%)", // Ungu Royal Eksklusif
-            "linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"  // Merah Marun Klasik
+            "linear-gradient(135deg, #064e3b 0%, #022c22 100%)", // Hijau Kasino
+            "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)", // Biru Midnight
+            "linear-gradient(135deg, #581c87 0%, #3b0764 100%)", // Ungu Royal
+            "linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)"  // Merah Marun
         ];
 
         function applyRandomTableTheme() {
@@ -268,12 +293,16 @@
             dot.className = 'signal-dot signal-green';
             text.innerText = 'Online';
 
-            // Auto Reconnect langsung masuk ke room tanpa login ulang jika ada sesi tersimpan
             let savedRoom = localStorage.getItem('bj_room');
             let savedUser = localStorage.getItem('bj_user');
             if (savedRoom && savedUser && !myData.roomId) {
                 myData.username = savedUser;
+                // Sembunyikan form secara total sebelum emit bergabung
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('lobby-section').style.display = 'none';
                 socket.emit('join_room', { roomId: savedRoom, username: savedUser, balance: myData.balance });
+            } else if (!savedUser) {
+                document.getElementById('auth-section').style.display = 'block';
             }
         });
 
@@ -335,9 +364,9 @@
 
         socket.on('room_joined', ({ roomId, isHost, hostUsername }) => {
             myData.roomId = roomId;
-            myData.isHost = isHost;
+            // PERBAIKAN: Selalu gunakan nama pengguna host dari server sebagai patokan utama
+            myData.isHost = (hostUsername === myData.username);
             
-            // Sembunyikan bagian login dan lobby secara total agar tidak bertumpuk saat reload
             document.getElementById('auth-section').style.display = 'none';
             document.getElementById('lobby-section').style.display = 'none';
             document.getElementById('game-wrapper').style.display = 'block';
@@ -346,7 +375,6 @@
             document.getElementById('current-host-lbl').innerText = hostUsername;
             document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
             
-            // Terapkan tema meja random saat masuk room
             applyRandomTableTheme();
             
             if(myData.isHost) {
@@ -410,7 +438,9 @@
         socket.on('update_room_state', (room) => { 
             window.currentRoomState = room;
             document.getElementById('current-host-lbl').innerText = room.hostUsername;
-            myData.isHost = (room.hostSocketId === socket.id);
+            
+            // PERBAIKAN: Gunakan nama untuk melacak Host, sehingga saat reload tidak bocor ke panel bet
+            myData.isHost = (room.hostUsername === myData.username);
             
             if(myData.isHost) {
                 document.getElementById('host-controls').style.display = 'block';
@@ -539,14 +569,14 @@
                     }
                     cardsHtml += '</div>';
 
-                    let kickBtnHtml = (myData.isHost && !room.gameStarted) ? `<br><button onclick="kickPlayer('${p.username}')" style="background:#e74c3c; color:white; padding:3px 6px; font-size:10px; margin-top:4px; width:auto;">Kick</button>` : '';
+                    let kickBtnHtml = (myData.isHost && !room.gameStarted) ? `<button onclick="kickPlayer('${p.username}')" style="background:#e74c3c; color:white; padding:3px 6px; font-size:9px; margin-top:2px; width:auto; border-radius:3px;">Kick</button>` : '';
 
                     pList.innerHTML += `<div class="player-chip ${statusClass}">
                         ${bjBadge}
-                        👤 <b style="color:#f1c40f; font-size:12px;">${labelName}</b><br>
-                        <small style="color:#2ecc71;">Saldo: ${formatNumber(p.balance)}</small><br>
-                        <small>Skor: ${handScore} | Bet: ${formatNumber(p.bet)}</small><br>
-                        Status: <span style="color:#38bdf8;">${room.gameStarted ? p.statuses[hIdx] : (p.ready ? 'SIAP' : 'Menunggu')}</span>
+                        <div style="color:#f1c40f; font-size:11px; font-weight:bold;">👤 ${labelName}</div>
+                        <div style="color:#2ecc71; font-size:9px;">Saldo: ${formatNumber(p.balance)}</div>
+                        <div style="color:#ffffff; font-size:9px;">Skor: ${handScore} | Bet: ${formatNumber(p.bet)}</div>
+                        <div style="color:#38bdf8; font-size:9px;">${room.gameStarted ? p.statuses[hIdx] : (p.ready ? 'SIAP' : 'Menunggu')}</div>
                         ${cardsHtml}
                         ${kickBtnHtml}
                     </div>`;
