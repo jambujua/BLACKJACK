@@ -15,7 +15,7 @@
         button { padding: 8px; font-size: 13px; border-radius: 5px; border: none; background-color: #f1c40f; font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px; color: black; }
         button:hover { background-color: #f39c12; }
         
-        #lobby-section, #game-wrapper { display: none; }
+        #lobby-section, #game-wrapper, #auth-section { display: none; }
         .room-panel { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
         .panel-card { background: #1e272e; padding: 12px; border-radius: 8px; width: 100%; max-width: 320px; text-align: left; box-sizing: border-box; border: 1px solid #34495e; }
 
@@ -287,6 +287,7 @@
             return Number(num || 0).toLocaleString('id-ID');
         }
 
+        // PERBAIKAN LOGIKA RECONNECT
         socket.on('connect', () => {
             let dot = document.getElementById('signal-dot');
             let text = document.getElementById('signal-text');
@@ -295,13 +296,44 @@
 
             let savedRoom = localStorage.getItem('bj_room');
             let savedUser = localStorage.getItem('bj_user');
-            if (savedRoom && savedUser && !myData.roomId) {
+
+            if (savedUser) {
                 myData.username = savedUser;
-                // Sembunyikan form secara total sebelum emit bergabung
+                // Lewati tampilan login karena sesi masih aktif
                 document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('lbl-username').innerText = myData.username;
+                
+                if (savedRoom && !myData.roomId) {
+                    // Coba otomatis masuk kembali ke meja permainan
+                    document.getElementById('lobby-section').style.display = 'none';
+                    socket.emit('join_room', { roomId: savedRoom, username: savedUser, balance: myData.balance });
+                } else {
+                    // Jika tidak ada room tersimpan, tampilkan Lobby
+                    document.getElementById('lobby-section').style.display = 'block';
+                    document.getElementById('game-wrapper').style.display = 'none';
+                }
+            } else {
+                // Jika tidak ada user login, kembalikan ke Auth
+                document.getElementById('auth-section').style.display = 'block';
                 document.getElementById('lobby-section').style.display = 'none';
-                socket.emit('join_room', { roomId: savedRoom, username: savedUser, balance: myData.balance });
-            } else if (!savedUser) {
+                document.getElementById('game-wrapper').style.display = 'none';
+            }
+        });
+
+        // PERBAIKAN HANDLING ROOM ERROR AGAR TIDAK STUCK (NGE-BLANK)
+        socket.on('room_error', (msg) => { 
+            alert(msg); 
+            document.getElementById('lobby-msg').innerText = msg; 
+            
+            // Hapus data room yang salah/hilang dari local storage
+            localStorage.removeItem('bj_room');
+            myData.roomId = '';
+            
+            // Tutup halaman game dan kembalikan ke Lobby atau Auth
+            document.getElementById('game-wrapper').style.display = 'none';
+            if (localStorage.getItem('bj_user')) {
+                document.getElementById('lobby-section').style.display = 'block';
+            } else {
                 document.getElementById('auth-section').style.display = 'block';
             }
         });
@@ -353,8 +385,6 @@
             localStorage.setItem('bj_room', roomId);
             socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
         }
-
-        socket.on('room_error', (msg) => { alert(msg); document.getElementById('lobby-msg').innerText = msg; });
         
         socket.on('kicked_from_room', (msg) => {
             alert(msg);
@@ -364,7 +394,6 @@
 
         socket.on('room_joined', ({ roomId, isHost, hostUsername }) => {
             myData.roomId = roomId;
-            // PERBAIKAN: Selalu gunakan nama pengguna host dari server sebagai patokan utama
             myData.isHost = (hostUsername === myData.username);
             
             document.getElementById('auth-section').style.display = 'none';
@@ -439,7 +468,6 @@
             window.currentRoomState = room;
             document.getElementById('current-host-lbl').innerText = room.hostUsername;
             
-            // PERBAIKAN: Gunakan nama untuk melacak Host, sehingga saat reload tidak bocor ke panel bet
             myData.isHost = (room.hostUsername === myData.username);
             
             if(myData.isHost) {
