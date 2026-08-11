@@ -92,6 +92,7 @@ app.get('/api/history', async (req, res) => {
 
 // --- SOCKET.IO ROOMS & GAME ENGINE ---
 const rooms = {};
+const DEBT_LIMIT = -10000000; // Batas maksimal hutang pemain (-10 Juta)
 
 async function savePlayerBalanceToDB(username, balance) {
   try {
@@ -154,7 +155,6 @@ io.on('connection', (socket) => {
       let isHost = (room.hostUsername === username);
       socket.emit('room_joined', { roomId, isHost, hostUsername: room.hostUsername });
       
-      // Beritahu peer lain di room untuk WebRTC voice chat
       socket.to(roomId).emit('peer_joined', { peerId: socket.id });
       socket.emit('update_room_state', room);
       return;
@@ -173,7 +173,7 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('update_room_state', room);
   });
 
-  // WebRTC Signaling Relay
+  // WebRTC Signaling untuk Voice Chat / Mikrofon
   socket.on('webrtc_offer', ({ target, offer }) => {
     io.to(target).emit('webrtc_offer', { sender: socket.id, offer });
   });
@@ -186,6 +186,16 @@ io.on('connection', (socket) => {
     io.to(target).emit('webrtc_ice_candidate', { sender: socket.id, candidate });
   });
 
+  // Fitur Request Topup ketika Saldo/Hutang Habis
+  socket.on('request_topup', async ({ username }) => {
+    try {
+      await Player.findOneAndUpdate({ username }, { topupRequested: true });
+      io.emit('receive_chat', { username: 'SYSTEM', message: `Pemain ${username} meminta isi saldo (Topup).` });
+    } catch (e) {
+      console.error("Gagal update topup request:", e.message);
+    }
+  });
+
   socket.on('set_ready', ({ roomId, bet, ready }) => {
     let room = rooms[roomId];
     if (!room) return;
@@ -193,6 +203,13 @@ io.on('connection', (socket) => {
     if (p && socket.id !== room.hostSocketId) {
       let numericBet = parseInt(bet) || 1000;
       if (numericBet > 10000000) numericBet = 10000000;
+
+      // Validasi Batas Hutang Max -10 Juta
+      if ((p.balance - numericBet) < DEBT_LIMIT) {
+        socket.emit('room_error', 'Limit hutang Anda mencapai batas (-10 Juta)! Silahkan Request Topup.');
+        return;
+      }
+
       p.bet = numericBet;
       p.ready = Boolean(ready);
       p.notReadySince = ready ? null : Date.now();
