@@ -20,25 +20,18 @@
 
         .container { max-width: 1050px; margin: 0 auto; }
 
-        /* Auth & Lobby Luxury Box */
         .card-box { 
-            background: rgba(17, 24, 39, 0.85); 
-            backdrop-filter: blur(12px);
-            padding: 25px; 
-            border-radius: 16px; 
-            max-width: 380px; 
-            margin: 40px auto; 
+            background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px);
+            padding: 25px; border-radius: 16px; max-width: 380px; margin: 40px auto; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(241, 196, 15, 0.1); 
-            text-align: left; 
-            border: 1px solid rgba(241, 196, 15, 0.3); 
+            text-align: left; border: 1px solid rgba(241, 196, 15, 0.3); 
         }
-        .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+        .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 22px; font-weight: 700; }
         .form-group { margin-bottom: 12px; }
         label { font-size: 12px; color: #9ca3af; font-weight: 600; }
         input, select { 
             width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; 
             border: 1px solid #374151; background: #0b0f19; color: white; margin-top: 5px; font-size: 14px;
-            transition: all 0.3s ease;
         }
         input:focus { border-color: #f1c40f; outline: none; box-shadow: 0 0 8px rgba(241, 196, 15, 0.3); }
         
@@ -50,7 +43,6 @@
             transition: all 0.2s ease;
         }
         button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(241, 196, 15, 0.5); }
-        button:active { transform: translateY(1px); }
         
         #lobby-section, #game-wrapper, #auth-section { display: none; }
         .room-panel { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
@@ -61,7 +53,6 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
         }
 
-        /* Signal Indicator */
         #signal-indicator {
             position: fixed; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px;
             background: rgba(15, 23, 42, 0.9); padding: 5px 12px; border-radius: 20px; font-size: 11px; z-index: 9999;
@@ -71,67 +62,44 @@
         .signal-green { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
         .signal-red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
 
-        /* Header Bar */
         .room-header-bar {
             background: rgba(17, 24, 39, 0.9); padding: 10px 18px; border-radius: 10px;
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 12px; border-left: 5px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             font-size: 13px; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
         }
 
-        /* Meja Kasino Eksklusif */
         .casino-table {
-            border: 2px solid rgba(241, 196, 15, 0.25); 
-            border-radius: 16px;
-            padding: 15px; 
-            margin-top: 5px;
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px;
+            border: 2px solid rgba(241, 196, 15, 0.25); border-radius: 16px; padding: 15px; margin-top: 5px;
+            display: flex; flex-direction: column; gap: 12px;
             box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-            transition: background 0.8s ease;
+            backdrop-filter: blur(5px); transition: background 0.8s ease;
         }
         
         .dealer-box-ui {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(241, 196, 15, 0.2);
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(241, 196, 15, 0.2);
+            border-radius: 12px; padding: 10px; text-align: center;
         }
 
         .players-box-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
         }
 
-        /* Animasi Kartu Premium */
-        .cards-container { 
-            display: flex; justify-content: center; 
-            min-height: 60px; margin-top: 6px; 
-            perspective: 1000px; 
-        }
+        .cards-container { display: flex; justify-content: center; min-height: 60px; margin-top: 6px; perspective: 1000px; }
         @keyframes cardSlideIn {
             0% { transform: translateY(-120px) scale(0.3) rotate(-20deg); opacity: 0; }
             60% { transform: translateY(10px) scale(1.05) rotate(5deg); opacity: 1; }
             100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
         }
         .card {
-            background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 100%);
-            color: #111827; width: 40px; height: 60px; border-radius: 6px;
-            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: 3px; font-size: 11px; font-weight: 700; box-shadow: -3px 4px 10px rgba(0,0,0,0.6);
-            border: 1px solid #d1d5db; position: relative; user-select: none;
-            opacity: 0;
-            transform-origin: top center;
+            background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 100%); color: #111827;
+            width: 40px; height: 60px; border-radius: 6px; display: flex; flex-direction: column;
+            justify-content: space-between; align-items: center; padding: 3px; font-size: 11px; font-weight: 700;
+            box-shadow: -3px 4px 10px rgba(0,0,0,0.6); border: 1px solid #d1d5db; position: relative;
+            opacity: 0; transform-origin: top center;
             animation: cardSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         .card:not(:first-child) { margin-left: -16px; }
-        
         .card-top { align-self: flex-start; font-size: 9px; line-height: 1; }
         .card-center { font-size: 15px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .card-bottom { align-self: flex-end; font-size: 9px; line-height: 1; transform: rotate(180deg); }
@@ -142,58 +110,36 @@
             position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
             background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
             padding: 2px 7px; font-size: 9px; font-weight: 700; border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.6); border: 1px solid #fef3c7; white-space: nowrap;
-            letter-spacing: 0.5px;
-            animation: pulseBadge 1.5s infinite;
-        }
-        @keyframes pulseBadge {
-            0% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.08); }
-            100% { transform: translateX(-50%) scale(1); }
+            border: 1px solid #fef3c7; white-space: nowrap;
         }
 
-        /* Player Chip Container & Split Hand Card UI */
         .player-chip { 
-            background: rgba(15, 23, 42, 0.7); 
-            padding: 10px; 
-            border-radius: 10px; 
-            border: 1px solid rgba(255,255,255,0.12); 
-            position: relative; 
-            font-size: 11px; 
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.12); position: relative; font-size: 11px; text-align: center;
         }
         .ready-true { border-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.25); }
         .ready-false { border-color: #ef4444; }
         .bust-card { opacity: 0.5; filter: grayscale(80%); }
         
-        @keyframes turnGlow {
-            0% { border-color: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-            50% { border-color: #fbbf24; box-shadow: 0 0 18px #f59e0b; }
-            100% { border-color: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-        }
-        .turn-active { border-color: #f59e0b !important; animation: turnGlow 1.2s infinite; background: rgba(245, 158, 11, 0.08); }
+        .turn-active { border-color: #f59e0b !important; box-shadow: 0 0 15px #f59e0b; background: rgba(245, 158, 11, 0.08); }
 
-        /* Split Hand Sub-Card Styling */
         .split-hand-box {
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 6px;
-            margin-top: 6px;
-            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.35); border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px; padding: 6px; margin-top: 6px;
         }
-        .split-hand-active {
-            border: 1px solid #f59e0b;
-            background: rgba(245, 158, 11, 0.12);
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-        }
+        .split-hand-active { border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.12); }
 
         .chat-box { 
             background: #030712; padding: 8px; border-radius: 8px; height: 80px; 
-            overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 6px; 
-            border: 1px solid #1f2937; 
+            overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 6px; border: 1px solid #1f2937; 
+        }
+
+        /* Lobby Active Rooms & History List Styling */
+        .lobby-scroll-box {
+            max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 6px; padding: 6px; margin-top: 5px; font-size: 11px; text-align: left;
+        }
+        .room-item-row {
+            display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
     </style>
 </head>
@@ -208,8 +154,8 @@
         <!-- AUTH SECTION -->
         <div id="auth-section" class="card-box">
             <h2>Blackjack 507</h2>
-            <div class="form-group"><label>Username</label><input type="text" id="username" placeholder="Masukkan username..."></div>
-            <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="Masukkan password..."></div>
+            <div class="form-group"><label>Username</label><input type="text" id="username" placeholder="Username..."></div>
+            <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="Password..."></div>
             <button onclick="loginUser()">Masuk (Login)</button>
             <button onclick="registerUser()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white;">Daftar Akun Baru</button>
             <div id="auth-msg" style="color:#ef4444; margin-top:8px; text-align:center; font-weight:600; font-size:11px;"></div>
@@ -219,16 +165,29 @@
         <div id="lobby-section">
             <h2 style="color: #f1c40f; margin-bottom: 5px;">Selamat Datang, <span id="lbl-username"></span></h2>
             <p style="font-size: 13px; color: #9ca3af;">Saldo Poin: <span id="lbl-balance" style="color:#10b981; font-weight:700;">0</span></p>
+            
             <div class="room-panel">
                 <div class="panel-card">
-                    <h3 style="font-size: 14px; margin-top:0; color:#f1c40f;">Buat Room Baru</h3>
+                    <h3 style="font-size: 13px; margin-top:0; color:#f1c40f;">Buat Room Baru</h3>
                     <label>ID Room</label><input type="text" id="create-room-id" placeholder="Contoh: room17">
                     <button onclick="createRoom()">Buat Room (Bandar)</button>
                 </div>
                 <div class="panel-card">
-                    <h3 style="font-size: 14px; margin-top:0; color:#10b981;">Gabung Room</h3>
+                    <h3 style="font-size: 13px; margin-top:0; color:#10b981;">Gabung Room Manual</h3>
                     <label>ID Room</label><input type="text" id="join-room-id" placeholder="ID Room teman">
-                    <button onclick="joinRoom()" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">Gabung (Pemain)</button>
+                    <button onclick="joinRoom()" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">Gabung</button>
+                </div>
+            </div>
+
+            <!-- Panel Daftar Room Aktif & Histori -->
+            <div class="room-panel" style="margin-top: 10px;">
+                <div class="panel-card" style="max-width: 480px;">
+                    <h3 style="font-size: 12px; margin:0; color:#38bdf8;">🌐 Room Aktif yang Tersedia</h3>
+                    <div class="lobby-scroll-box" id="active-rooms-list">Memuat daftar room...</div>
+                </div>
+                <div class="panel-card" style="max-width: 480px;">
+                    <h3 style="font-size: 12px; margin:0; color:#f59e0b;">📜 Histori Permainan Anda</h3>
+                    <div class="lobby-scroll-box" id="player-history-list">Memuat histori...</div>
                 </div>
             </div>
             <div id="lobby-msg" style="color:#ef4444; margin-top:10px; font-weight:600; font-size:11px;"></div>
@@ -242,24 +201,20 @@
                 <div><span>Saldo Anda:</span> <strong id="game-live-balance" style="color:#10b981;">0</strong></div>
             </div>
             
-            <!-- MEJA KOTAK PRESISI DENGAN TEMA RANDOM DINAMIS -->
             <div class="casino-table" id="casino-table-theme">
-                <!-- Kotak Bandar -->
                 <div class="dealer-box-ui">
-                    <div style="font-size:12px; font-weight:700; color:#f1c40f; margin-bottom:2px; letter-spacing: 0.5px;">👑 BANDAR / DEALER</div>
+                    <div style="font-size:12px; font-weight:700; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
                     <div style="font-size:10px; color:#9ca3af;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
                     <div class="cards-container" id="dealer-cards"></div>
                 </div>
 
-                <!-- Kotak Grid Pemain Kompak & Rapi -->
                 <div>
-                    <div style="font-size:11px; font-weight:700; color:#38bdf8; margin-bottom:6px; text-align:left; letter-spacing: 0.5px;">👥 MEJA PEMAIN</div>
+                    <div style="font-size:11px; font-weight:700; color:#38bdf8; margin-bottom:6px; text-align:left;">👥 MEJA PEMAIN</div>
                     <div class="players-box-grid" id="room-players-list"></div>
                 </div>
             </div>
 
-            <!-- PANEL KONTROL & SIAP -->
-            <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px);">
+            <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.08);">
                 <div id="betting-controls">
                     <label>Taruhan Poin (Max 10 Juta):</label><br>
                     <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:140px; display:inline-block; padding:6px;">
@@ -276,12 +231,11 @@
 
                 <div style="margin-top: 8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
                     <button onclick="requestEndGame()" id="end-game-btn" style="background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color:white; max-width:150px; font-size:11px; padding:7px;">Akhiri Game</button>
-                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:linear-gradient(135deg, #d97706 0%, #b45309 100%); color:white; max-width:170px; display:none; font-size:11px; padding:7px;">Paksa Akhiri (Inaktif)</button>
+                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:linear-gradient(135deg, #d97706 0%, #b45309 100%); color:white; max-width:170px; display:none; font-size:11px; padding:7px;">Paksa Akhiri</button>
                     <span id="end-game-status" style="font-size:10px; color:#f1c40f; display:block; width:100%; margin-top:2px; font-weight:600;"></span>
                 </div>
             </div>
 
-            <!-- TOMBOL AKSI PEMAIN -->
             <div id="action-panel" style="display:none; margin-top:10px;">
                 <p id="turn-notice" style="color:#f59e0b; font-weight:700; font-size:12px; margin-bottom:5px;"></p>
                 <div style="display:flex; gap:6px; justify-content:center;">
@@ -292,7 +246,6 @@
                 </div>
             </div>
 
-            <!-- CHAT & HISTORY -->
             <div class="room-panel" style="margin-top:10px;">
                 <div class="panel-card" style="padding:10px; max-width: 100%;">
                     <h3 style="margin:0 0 4px 0; font-size:12px; color:#f1c40f;">📊 Status Ronde</h3>
@@ -316,10 +269,10 @@
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
 
         const tableThemes = [
-            "radial-gradient(circle at center, #064e3b 0%, #022c22 100%)", // Hijau Mewah Kasino
-            "radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%)", // Biru Midnight Elegan
-            "radial-gradient(circle at center, #581c87 0%, #3b0764 100%)", // Ungu Royal
-            "radial-gradient(circle at center, #7f1d1d 0%, #450a0a 100%)"  // Merah Marun Klasik
+            "radial-gradient(circle at center, #064e3b 0%, #022c22 100%)",
+            "radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%)",
+            "radial-gradient(circle at center, #581c87 0%, #3b0764 100%)",
+            "radial-gradient(circle at center, #7f1d1d 0%, #450a0a 100%)"
         ];
 
         function applyRandomTableTheme() {
@@ -355,6 +308,49 @@
             return Number(num || 0).toLocaleString('id-ID');
         }
 
+        async function fetchLobbyData() {
+            if (!myData.username) return;
+            try {
+                // Fetch Active Rooms
+                let resRooms = await fetch(`${API_URL}/rooms/active`);
+                let roomsList = await resRooms.json();
+                let roomsContainer = document.getElementById('active-rooms-list');
+                if (roomsList.length === 0) {
+                    roomsContainer.innerHTML = `<span style="color:#9ca3af;">Tidak ada room aktif saat ini.</span>`;
+                } else {
+                    roomsContainer.innerHTML = roomsList.map(r => `
+                        <div class="room-item-row">
+                            <span><b>Room: ${r.roomId}</b> (Bandar: ${r.hostUsername}) - ${r.playerCount} Pemain</span>
+                            <button onclick="joinActiveRoom('${r.roomId}')" style="width:auto; padding:3px 8px; font-size:10px; margin:0;">Gabung</button>
+                        </div>
+                    `).join('');
+                }
+
+                // Fetch Player History
+                let resHist = await fetch(`${API_URL}/history?username=${myData.username}`);
+                let histList = await resHist.json();
+                let histContainer = document.getElementById('player-history-list');
+                if (histList.length === 0) {
+                    histContainer.innerHTML = `<span style="color:#9ca3af;">Belum ada histori permainan.</span>`;
+                } else {
+                    histContainer.innerHTML = histList.map(h => {
+                        let color = h.pointsChange > 0 ? '#10b981' : (h.pointsChange < 0 ? '#ef4444' : '#f59e0b');
+                        let sign = h.pointsChange > 0 ? '+' : '';
+                        return `<div style="padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            [Room: ${h.roomNumber}] <b style="color:${color};">${h.result}</b> (${sign}${formatNumber(h.pointsChange)})
+                        </div>`;
+                    }).join('');
+                }
+            } catch (e) {
+                console.error("Gagal mengambil data lobby:", e);
+            }
+        }
+
+        function joinActiveRoom(roomId) {
+            localStorage.setItem('bj_room', roomId);
+            socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
+        }
+
         socket.on('connect', () => {
             let dot = document.getElementById('signal-dot');
             let text = document.getElementById('signal-text');
@@ -375,11 +371,10 @@
                 } else {
                     document.getElementById('lobby-section').style.display = 'block';
                     document.getElementById('game-wrapper').style.display = 'none';
+                    fetchLobbyData();
                 }
             } else {
                 document.getElementById('auth-section').style.display = 'block';
-                document.getElementById('lobby-section').style.display = 'none';
-                document.getElementById('game-wrapper').style.display = 'none';
             }
         });
 
@@ -391,6 +386,7 @@
             document.getElementById('game-wrapper').style.display = 'none';
             if (localStorage.getItem('bj_user')) {
                 document.getElementById('lobby-section').style.display = 'block';
+                fetchLobbyData();
             } else {
                 document.getElementById('auth-section').style.display = 'block';
             }
@@ -425,6 +421,7 @@
                 document.getElementById('lobby-section').style.display = 'block';
                 document.getElementById('lbl-username').innerText = myData.username;
                 document.getElementById('lbl-balance').innerText = formatNumber(myData.balance);
+                fetchLobbyData();
             } else {
                 document.getElementById('auth-msg').innerText = data.message;
             }
@@ -551,16 +548,13 @@
             if (myData.isHost) {
                 let startBtn = document.getElementById('start-game-btn');
                 let bettingPlayers = room.players.filter(p => p.socketId !== room.hostSocketId);
-                let canStart = !room.gameStarted && bettingPlayers.length > 0;
+                let allReady = bettingPlayers.length > 0 && bettingPlayers.every(p => p.ready === true);
+                let canStart = !room.gameStarted && allReady;
                 startBtn.style.opacity = canStart ? "1" : "0.5";
                 startBtn.disabled = !canStart;
             }
 
             renderRoom(room); 
-        });
-
-        socket.on('inactive_timeout_warning', (msg) => {
-            document.getElementById('end-game-status').innerText = "⚠️ " + msg;
         });
 
         socket.on('game_started', (room) => {
@@ -638,8 +632,6 @@
                 if (isCurrentTurnPlayer) mainStatusClass += ' turn-active';
 
                 let handsHtml = '';
-                
-                // RENDER TANGAN PEMAIN (Mendukung Split dengan Rapi & Elegan)
                 p.hands.forEach((hand, hIdx) => {
                     let handScore = calculateScore(hand);
                     let isBJ = hand.length === 2 && handScore === 21;
