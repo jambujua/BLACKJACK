@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack 507 - AYO KITA MAINKAN</title>
+    <title>Blackjack 507 - Luxury Edition</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
@@ -134,12 +134,40 @@
             overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 6px; border: 1px solid #1f2937; 
         }
 
-        /* Lobby Active Rooms & History List Styling */
         .lobby-scroll-box {
             max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 6px; padding: 6px; margin-top: 5px; font-size: 11px; text-align: left;
         }
         .room-item-row {
             display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Avatar Profil Pemain Estetik */
+        .player-avatar {
+            width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444);
+            display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;
+            color: white; border: 2px solid #f1c40f; box-shadow: 0 0 10px rgba(241, 196, 15, 0.4);
+        }
+
+        /* Popup Banner Animasi 3 Detik */
+        #popup-banner {
+            position: fixed; top: 20%; left: 50%; transform: translateX(-50%) scale(0.8);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(220, 38, 38, 0.95));
+            color: white; padding: 15px 30px; border-radius: 12px; font-size: 18px; font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px #f1c40f; z-index: 10000;
+            display: none; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #popup-banner.show {
+            display: block; transform: translateX(-50%) scale(1); opacity: 1;
+        }
+
+        /* Audio Control Panel */
+        #audio-controls {
+            position: fixed; bottom: 10px; right: 10px; display: flex; gap: 8px; z-index: 9999;
+        }
+        .control-pill {
+            background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; color: white;
+            backdrop-filter: blur(5px); font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -148,6 +176,15 @@
     <div id="signal-indicator">
         <div id="signal-dot" class="signal-dot signal-red"></div>
         <span id="signal-text">Connecting...</span>
+    </div>
+
+    <!-- Popup Banner 3 Detik -->
+    <div id="popup-banner">★ PEMAIN MENANG! ★</div>
+
+    <!-- Audio & Microphone Controls -->
+    <div id="audio-controls">
+        <button class="control-pill" id="bgm-toggle-btn" onclick="toggleBGM()">🔊 Musik: ON</button>
+        <button class="control-pill" id="mic-toggle-btn" onclick="toggleMic()">🎙️ Mic: OFF</button>
     </div>
 
     <div class="container">
@@ -163,8 +200,13 @@
 
         <!-- LOBBY ROOM SECTION -->
         <div id="lobby-section">
-            <h2 style="color: #f1c40f; margin-bottom: 5px;">Selamat Datang, <span id="lbl-username"></span></h2>
-            <p style="font-size: 13px; color: #9ca3af;">Saldo Poin: <span id="lbl-balance" style="color:#10b981; font-weight:700;">0</span></p>
+            <div style="display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 10px;">
+                <div class="player-avatar" id="lobby-avatar-icon">J</div>
+                <div style="text-align: left;">
+                    <h2 style="color: #f1c40f; margin: 0; font-size: 18px;"><span id="lbl-username"></span></h2>
+                    <p style="font-size: 12px; color: #10b981; margin: 0; font-weight: 700;">🪙 Saldo: <span id="lbl-balance">0</span></p>
+                </div>
+            </div>
             
             <div class="room-panel">
                 <div class="panel-card">
@@ -179,7 +221,6 @@
                 </div>
             </div>
 
-            <!-- Panel Daftar Room Aktif & Histori -->
             <div class="room-panel" style="margin-top: 10px;">
                 <div class="panel-card" style="max-width: 480px;">
                     <h3 style="font-size: 12px; margin:0; color:#38bdf8;">🌐 Room Aktif yang Tersedia</h3>
@@ -198,7 +239,7 @@
             <div class="room-header-bar">
                 <div><span>Room:</span> <strong id="current-room-lbl" style="color:#f1c40f;">-</strong></div>
                 <div><span>Bandar:</span> <strong id="current-host-lbl" style="color:#10b981;">-</strong></div>
-                <div><span>Saldo Anda:</span> <strong id="game-live-balance" style="color:#10b981;">0</strong></div>
+                <div><span>🪙 Saldo Anda:</span> <strong id="game-live-balance" style="color:#10b981;">0</strong></div>
             </div>
             
             <div class="casino-table" id="casino-table-theme">
@@ -216,7 +257,7 @@
 
             <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.08);">
                 <div id="betting-controls">
-                    <label>Taruhan Poin (Max 10 Juta):</label><br>
+                    <label>🪙 Taruhan Poin (Max 10 Juta):</label><br>
                     <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:140px; display:inline-block; padding:6px;">
                     <button onclick="toggleReady()" id="ready-btn" style="max-width:140px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; display:inline-block; padding:7px;">SIAP (Ready)</button>
                 </div>
@@ -236,6 +277,7 @@
                 </div>
             </div>
 
+            <!-- TOMBOL AKSI PEMAIN (Hanya muncul saat giliran pemain) -->
             <div id="action-panel" style="display:none; margin-top:10px;">
                 <p id="turn-notice" style="color:#f59e0b; font-weight:700; font-size:12px; margin-bottom:5px;"></p>
                 <div style="display:flex; gap:6px; justify-content:center;">
@@ -267,6 +309,163 @@
         const socket = io();
         const API_URL = '/api';
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
+
+        // Web Audio BGM Synthesizer & Looper
+        let audioCtx = null;
+        let bgmPlaying = false;
+        let bgmInterval = null;
+
+        function toggleBGM() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            bgmPlaying = !bgmPlaying;
+            let btn = document.getElementById('bgm-toggle-btn');
+            if (bgmPlaying) {
+                btn.innerText = "🔊 Musik: ON";
+                startBGM();
+            } else {
+                btn.innerText = "🔇 Musik: OFF";
+                stopBGM();
+            }
+        }
+
+        function startBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // C chord arpeggio
+            let idx = 0;
+            bgmInterval = setInterval(() => {
+                if (!bgmPlaying || !audioCtx) return;
+                try {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(notes[idx % notes.length], audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.8);
+                    idx++;
+                } catch(e) {}
+            }, 600);
+        }
+
+        function stopBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+        }
+
+        // WebRTC Voice Chat Integration
+        let localStream = null;
+        let micActive = false;
+        let peerConnections = {};
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        async function toggleMic() {
+            let btn = document.getElementById('mic-toggle-btn');
+            if (!micActive) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    micActive = true;
+                    btn.innerText = "🎙️ Mic: ON";
+                    btn.style.background = "#10b981";
+                    
+                    // Hubungkan dengan peer yang sudah ada di room
+                    socket.emit('join_room', { roomId: myData.roomId, username: myData.username, balance: myData.balance });
+                } catch (e) {
+                    alert("Gagal mengakses mikrofon: " + e.message);
+                }
+            } else {
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+                localStream = null;
+                micActive = false;
+                btn.innerText = "🎙️ Mic: OFF";
+                btn.style.background = "";
+            }
+        }
+
+        socket.on('peer_joined', async ({ peerId }) => {
+            if (!micActive || !localStream) return;
+            try {
+                let pc = createPeerConnection(peerId);
+                let offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                socket.emit('webrtc_offer', { target: peerId, offer });
+            } catch (e) { console.error("WebRTC Offer error:", e); }
+        });
+
+        socket.on('webrtc_offer', async ({ sender, offer }) => {
+            if (!micActive) return;
+            try {
+                let pc = createPeerConnection(sender);
+                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                let answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                socket.emit('webrtc_answer', { target: sender, answer });
+            } catch (e) { console.error("WebRTC Answer error:", e); }
+        });
+
+        socket.on('webrtc_answer', async ({ sender, answer }) => {
+            let pc = peerConnections[sender];
+            if (pc) {
+                await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            }
+        });
+
+        socket.on('webrtc_ice_candidate', async ({ sender, candidate }) => {
+            let pc = peerConnections[sender];
+            if (pc && candidate) {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+        });
+
+        socket.on('peer_disconnected', ({ peerId }) => {
+            if (peerConnections[peerId]) {
+                peerConnections[peerId].close();
+                delete peerConnections[peerId];
+            }
+        });
+
+        function createPeerConnection(peerId) {
+            if (peerConnections[peerId]) return peerConnections[peerId];
+            let pc = new RTCPeerConnection(rtcConfig);
+            peerConnections[peerId] = pc;
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            }
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('webrtc_ice_candidate', { target: peerId, candidate: event.candidate });
+                }
+            };
+
+            pc.ontrack = (event) => {
+                let remoteAudio = document.createElement('audio');
+                remoteAudio.srcObject = event.streams[0];
+                remoteAudio.autoplay = true;
+                document.body.appendChild(remoteAudio);
+            };
+
+            return pc;
+        }
+
+        // Popup Banner 3 Detik
+        function showPopupBanner(text) {
+            let banner = document.getElementById('popup-banner');
+            banner.innerText = text;
+            banner.classList.add('show');
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 3000);
+        }
 
         const tableThemes = [
             "radial-gradient(circle at center, #064e3b 0%, #022c22 100%)",
@@ -311,7 +510,6 @@
         async function fetchLobbyData() {
             if (!myData.username) return;
             try {
-                // Fetch Active Rooms
                 let resRooms = await fetch(`${API_URL}/rooms/active`);
                 let roomsList = await resRooms.json();
                 let roomsContainer = document.getElementById('active-rooms-list');
@@ -326,7 +524,6 @@
                     `).join('');
                 }
 
-                // Fetch Player History
                 let resHist = await fetch(`${API_URL}/history?username=${myData.username}`);
                 let histList = await resHist.json();
                 let histContainer = document.getElementById('player-history-list');
@@ -364,6 +561,7 @@
                 myData.username = savedUser;
                 document.getElementById('auth-section').style.display = 'none';
                 document.getElementById('lbl-username').innerText = myData.username;
+                document.getElementById('lobby-avatar-icon').innerText = myData.username.charAt(0).toUpperCase();
                 
                 if (savedRoom && !myData.roomId) {
                     document.getElementById('lobby-section').style.display = 'none';
@@ -421,6 +619,7 @@
                 document.getElementById('lobby-section').style.display = 'block';
                 document.getElementById('lbl-username').innerText = myData.username;
                 document.getElementById('lbl-balance').innerText = formatNumber(myData.balance);
+                document.getElementById('lobby-avatar-icon').innerText = myData.username.charAt(0).toUpperCase();
                 fetchLobbyData();
             } else {
                 document.getElementById('auth-msg').innerText = data.message;
@@ -582,11 +781,19 @@
                 document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
             }
 
+            let winnerNames = [];
             let summary = room.players.filter(p => p.socketId !== room.hostSocketId).map(p => {
                 let resStr = p.roundResults ? p.roundResults.join(' & ') : '';
-                if (resStr.includes('BLACKJACK') || resStr.includes('WIN')) playBlackjackSound();
+                if (resStr.includes('BLACKJACK') || resStr.includes('WIN')) {
+                    playBlackjackSound();
+                    winnerNames.push(p.username);
+                }
                 return `${p.username}: [${resStr}]`;
             }).join(' | ');
+
+            if (winnerNames.length > 0) {
+                showPopupBanner(`🎉 Pemenang Ronde: ${winnerNames.join(', ')}!`);
+            }
 
             document.getElementById('round-status-text').innerText = `Hasil Akhir: ${summary || 'Selesai'}`;
             renderRoom(room, false);
@@ -677,15 +884,16 @@
                     <div class="player-chip ${mainStatusClass}">
                         <div style="font-size: 11px; font-weight: 700; color: #f1c40f; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
                             <span>👤 ${p.username}</span>
-                            <span style="color: #10b981; font-size: 10px;">${formatNumber(p.balance)}</span>
+                            <span style="color: #10b981; font-size: 10px;">🪙 ${formatNumber(p.balance)}</span>
                         </div>
-                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 6px;">Taruhan: <b style="color:white;">${formatNumber(p.bet)}</b></div>
+                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 6px;">Taruhan: <b style="color:white;">🪙 ${formatNumber(p.bet)}</b></div>
                         ${handsHtml}
                         ${kickBtnHtml}
                     </div>
                 `;
             });
 
+            // TOMBOL AKSI HANYA MUNCUL DI GILIRAN PEMAIN ITU SENDIRI
             let actionPanel = document.getElementById('action-panel');
             actionPanel.style.display = isMyTurn ? 'block' : 'none';
             if (isMyTurn) document.getElementById('turn-notice').innerText = "⚡ Giliran Anda untuk Memilih Aksi!";
