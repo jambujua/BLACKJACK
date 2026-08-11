@@ -184,8 +184,14 @@ io.on('connection', (socket) => {
     let existingPlayer = room.players.find(p => p.username === username);
     if (existingPlayer) {
       existingPlayer.socketId = socket.id;
+      
+      // PERBAIKAN: Jika yang reconnect adalah Bandar, update hostSocketId agar sinkron!
+      if (room.hostUsername === username) {
+        room.hostSocketId = socket.id;
+      }
+
       socket.join(roomId);
-      let isHost = (room.hostSocketId === socket.id);
+      let isHost = (room.hostUsername === username);
       socket.emit('room_joined', { roomId, isHost, hostUsername: room.hostUsername });
       socket.emit('update_room_state', room);
       return;
@@ -197,7 +203,7 @@ io.on('connection', (socket) => {
       hands: [[]], statuses: ['waiting'], splitCount: 0 
     });
     room.lastActivityTime = Date.now();
-    let isHost = (room.hostSocketId === socket.id);
+    let isHost = (room.hostUsername === username);
     socket.emit('room_joined', { roomId, isHost, hostUsername: room.hostUsername });
     io.to(roomId).emit('update_room_state', room);
   });
@@ -208,7 +214,7 @@ io.on('connection', (socket) => {
     let p = room.players.find(x => x.socketId === socket.id);
     if (p && socket.id !== room.hostSocketId) {
       let numericBet = parseInt(bet) || 1000;
-      if (numericBet > 10000000) numericBet = 10000000; // Batas maksimal 10.000.000
+      if (numericBet > 10000000) numericBet = 10000000;
       p.bet = numericBet;
       p.ready = Boolean(ready);
       room.lastActivityTime = Date.now();
@@ -216,7 +222,6 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('update_room_state', room);
   });
 
-  // Fitur Bandar Kick Pemain
   socket.on('kick_player', ({ roomId, usernameToKick }) => {
     let room = rooms[roomId];
     if (!room || room.hostSocketId !== socket.id) return;
@@ -230,7 +235,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Fitur Bandar Paksa Akhiri Game (1 menit tanpa respons atau manual)
   socket.on('host_force_end_game', (roomId) => {
     let room = rooms[roomId];
     if (!room || room.hostSocketId !== socket.id) return;
@@ -399,18 +403,14 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('receive_chat', { username, message });
   });
 
-  socket.on('disconnect', () => {
-    // Tidak langsung hapus pemain agar saat reload halaman bisa terhubung ulang (reconnect)
-  });
+  socket.on('disconnect', () => {});
 });
 
-// Interval pengecekan otomatis: Jika 1 menit tidak ada aktivitas saat game belum mulai / macet, bandar bisa akhiri
 setInterval(() => {
   const now = Date.now();
   for (let roomId in rooms) {
     let room = rooms[roomId];
     if (room && !room.gameStarted && room.lastActivityTime && (now - room.lastActivityTime > 60000)) {
-      // Lebih dari 60 detik (1 menit) tanpa aktivitas
       io.to(roomId).emit('inactive_timeout_warning', 'Meja tidak aktif selama 1 menit.');
     }
   }
