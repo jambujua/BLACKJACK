@@ -7,212 +7,43 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-
-        body { 
-            font-family: 'Poppins', sans-serif; 
-            background: radial-gradient(circle at center, #111827 0%, #030712 100%); 
-            color: #f3f4f6; 
-            text-align: center; 
-            margin: 0; 
-            padding: 10px; 
-            min-height: 100vh;
-        }
-
+        body { font-family: 'Poppins', sans-serif; background: radial-gradient(circle at center, #111827 0%, #030712 100%); color: #f3f4f6; text-align: center; margin: 0; padding: 10px; min-height: 100vh; }
         .container { max-width: 1050px; margin: 0 auto; }
-
-        .card-box { 
-            background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px);
-            padding: 25px; border-radius: 16px; max-width: 380px; margin: 40px auto; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(241, 196, 15, 0.1); 
-            text-align: left; border: 1px solid rgba(241, 196, 15, 0.3); 
-        }
+        .card-box { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); padding: 25px; border-radius: 16px; max-width: 380px; margin: 40px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.8); text-align: left; border: 1px solid rgba(241, 196, 15, 0.3); }
         .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 22px; font-weight: 700; }
         .form-group { margin-bottom: 12px; }
         label { font-size: 12px; color: #9ca3af; font-weight: 600; }
-        input, select { 
-            width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; 
-            border: 1px solid #374151; background: #0b0f19; color: white; margin-top: 5px; font-size: 14px;
-        }
-        input:focus { border-color: #f1c40f; outline: none; box-shadow: 0 0 8px rgba(241, 196, 15, 0.3); }
-        
-        button { 
-            padding: 11px; font-size: 14px; border-radius: 8px; border: none; 
-            background: linear-gradient(135deg, #f1c40f 0%, #d4af37 100%); 
-            font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; color: #111; 
-            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3);
-            transition: all 0.2s ease;
-        }
-        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(241, 196, 15, 0.5); }
-        
+        input, select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #374151; background: #0b0f19; color: white; margin-top: 5px; font-size: 14px; }
+        button { padding: 11px; font-size: 14px; border-radius: 8px; border: none; background: linear-gradient(135deg, #f1c40f 0%, #d4af37 100%); font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; color: #111; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3); }
         #lobby-section, #game-wrapper, #auth-section { display: none; }
         .room-panel { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
-        .panel-card { 
-            background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(10px);
-            padding: 15px; border-radius: 12px; width: 100%; max-width: 330px; text-align: left; 
-            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.08); 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-        }
-
-        /* Styling Chip Taruhan */
-        .chip-container {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 8px 0;
-        }
-        .casino-chip {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 3px dashed rgba(255, 255, 255, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 700;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 0 6px rgba(0,0,0,0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-            user-select: none;
-        }
+        .panel-card { background: rgba(17, 24, 39, 0.85); padding: 15px; border-radius: 12px; width: 100%; max-width: 330px; text-align: left; border: 1px solid rgba(255,255,255,0.08); }
+        
+        .chip-container { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
+        .casino-chip { width: 48px; height: 48px; border-radius: 50%; border: 3px dashed rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; cursor: pointer; user-select: none; }
         .casino-chip:hover { transform: scale(1.1); }
-        .casino-chip:active { transform: scale(0.95); }
         .chip-1k { background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%); }
         .chip-5k { background: radial-gradient(circle, #10b981 0%, #059669 100%); }
         .chip-25k { background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%); }
         .chip-100k { background: radial-gradient(circle, #8b5cf6 0%, #6d28d9 100%); }
         .chip-1m { background: radial-gradient(circle, #f59e0b 0%, #b45309 100%); }
 
-        #signal-indicator {
-            position: fixed; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px;
-            background: rgba(15, 23, 42, 0.9); padding: 5px 12px; border-radius: 20px; font-size: 11px; z-index: 9999;
-            border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(8px);
-        }
-        .signal-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .signal-green { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
-        .signal-red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
-
-        .room-header-bar {
-            background: rgba(17, 24, 39, 0.9); padding: 10px 18px; border-radius: 10px;
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; border-left: 5px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            font-size: 13px; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .casino-table {
-            border: 2px solid rgba(241, 196, 15, 0.25); border-radius: 16px; padding: 15px; margin-top: 5px;
-            display: flex; flex-direction: column; gap: 12px;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px); transition: background 0.8s ease;
-        }
-        
-        .dealer-box-ui {
-            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(241, 196, 15, 0.2);
-            border-radius: 12px; padding: 10px; text-align: center;
-        }
-
-        .players-box-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
-        }
-
-        .cards-container { display: flex; justify-content: center; min-height: 60px; margin-top: 6px; perspective: 1000px; }
-        @keyframes cardSlideIn {
-            0% { transform: translateY(-120px) scale(0.3) rotate(-20deg); opacity: 0; }
-            60% { transform: translateY(10px) scale(1.05) rotate(5deg); opacity: 1; }
-            100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-        }
-        .card {
-            background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 100%); color: #111827;
-            width: 40px; height: 60px; border-radius: 6px; display: flex; flex-direction: column;
-            justify-content: space-between; align-items: center; padding: 3px; font-size: 11px; font-weight: 700;
-            box-shadow: -3px 4px 10px rgba(0,0,0,0.6); border: 1px solid #d1d5db; position: relative;
-            opacity: 0; transform-origin: top center;
-            animation: cardSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
+        .room-header-bar { background: rgba(17, 24, 39, 0.9); padding: 10px 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-left: 5px solid #f1c40f; }
+        .casino-table { border: 2px solid rgba(241, 196, 15, 0.25); border-radius: 16px; padding: 15px; margin-top: 5px; display: flex; flex-direction: column; gap: 12px; }
+        .dealer-box-ui { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(241, 196, 15, 0.2); border-radius: 12px; padding: 10px; text-align: center; }
+        .players-box-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .cards-container { display: flex; justify-content: center; min-height: 60px; margin-top: 6px; }
+        .card { background: #fff; color: #111; width: 40px; height: 60px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 3px; font-size: 11px; font-weight: 700; border: 1px solid #d1d5db; position: relative; }
         .card:not(:first-child) { margin-left: -16px; }
-        .card-top { align-self: flex-start; font-size: 9px; line-height: 1; }
-        .card-center { font-size: 15px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .card-bottom { align-self: flex-end; font-size: 9px; line-height: 1; transform: rotate(180deg); }
         .red-suit { color: #ef4444 !important; }
-        .closed-card { background: repeating-linear-gradient(45deg, #1e3a8a, #1e3a8a 6px, #1d4ed8 6px, #1d4ed8 12px); color: transparent; border: 1px solid #93c5fd; }
-
-        .bj-badge {
-            position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
-            padding: 2px 7px; font-size: 9px; font-weight: 700; border-radius: 10px;
-            border: 1px solid #fef3c7; white-space: nowrap;
-        }
-
-        .player-chip { 
-            background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 10px; 
-            border: 1px solid rgba(255,255,255,0.12); position: relative; font-size: 11px; text-align: center;
-        }
-        .ready-true { border-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.25); }
+        .player-chip { background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); font-size: 11px; text-align: center; }
+        .ready-true { border-color: #10b981; }
         .ready-false { border-color: #ef4444; }
-        .bust-card { opacity: 0.5; filter: grayscale(80%); }
-        
-        .turn-active { border-color: #f59e0b !important; box-shadow: 0 0 15px #f59e0b; background: rgba(245, 158, 11, 0.08); }
-
-        .split-hand-box {
-            background: rgba(0, 0, 0, 0.35); border: 1px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 8px; padding: 6px; margin-top: 6px;
-        }
-        .split-hand-active { border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.12); }
-
-        .chat-box { 
-            background: #030712; padding: 8px; border-radius: 8px; height: 80px; 
-            overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 6px; border: 1px solid #1f2937; 
-        }
-
-        .lobby-scroll-box {
-            max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 6px; padding: 6px; margin-top: 5px; font-size: 11px; text-align: left;
-        }
-        .room-item-row {
-            display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .player-avatar {
-            width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444);
-            display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 15px;
-            color: white; border: 2px solid #f1c40f; box-shadow: 0 0 12px rgba(241, 196, 15, 0.5);
-        }
-
-        #popup-banner {
-            position: fixed; top: 20%; left: 50%; transform: translateX(-50%) scale(0.8);
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(220, 38, 38, 0.95));
-            color: white; padding: 15px 30px; border-radius: 12px; font-size: 18px; font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px #f1c40f; z-index: 10000;
-            display: none; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        #popup-banner.show {
-            display: block; transform: translateX(-50%) scale(1); opacity: 1;
-        }
-
-        #audio-controls {
-            position: fixed; bottom: 10px; right: 10px; display: flex; gap: 8px; z-index: 9999;
-        }
-        .control-pill {
-            background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(255,255,255,0.2);
-            padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; color: white;
-            backdrop-filter: blur(5px); font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
+        .chat-box { background: #030712; padding: 8px; border-radius: 8px; height: 80px; overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 6px; }
+        .lobby-scroll-box { max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 6px; padding: 6px; font-size: 11px; text-align: left; }
     </style>
 </head>
 <body>
-
-    <div id="signal-indicator">
-        <div id="signal-dot" class="signal-dot signal-red"></div>
-        <span id="signal-text">Connecting...</span>
-    </div>
-
-    <div id="popup-banner">★ PEMAIN MENANG! ★</div>
-
-    <div id="audio-controls">
-        <button class="control-pill" id="bgm-toggle-btn" onclick="toggleBGM()">🔊 Musik: ON</button>
-        <button class="control-pill" id="mic-toggle-btn" onclick="toggleMic()">🎙️ Mic: OFF</button>
-    </div>
 
     <div class="container">
         <!-- AUTH SECTION -->
@@ -221,70 +52,59 @@
             <div class="form-group"><label>Username</label><input type="text" id="username" placeholder="Username..."></div>
             <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="Password..."></div>
             <button onclick="loginUser()">Masuk (Login)</button>
-            <button onclick="registerUser()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white;">Daftar Akun Baru</button>
-            <div id="auth-msg" style="color:#ef4444; margin-top:8px; text-align:center; font-weight:600; font-size:11px;"></div>
+            <button onclick="registerUser()" style="background: #3b82f6; color:white;">Daftar Akun Baru</button>
+            <div id="auth-msg" style="color:#ef4444; margin-top:8px; text-align:center; font-size:11px;"></div>
         </div>
 
-        <!-- LOBBY ROOM SECTION -->
+        <!-- LOBBY SECTION -->
         <div id="lobby-section">
-            <div style="display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 12px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                <div class="player-avatar" id="lobby-avatar-icon">J</div>
-                <div style="text-align: left;">
-                    <h2 style="color: #f1c40f; margin: 0; font-size: 18px;"><span id="lbl-username"></span></h2>
-                    <p style="font-size: 13px; color: #10b981; margin: 0; font-weight: 700;">🪙 Saldo: <span id="lbl-balance">0</span></p>
-                </div>
-            </div>
-            
+            <h2 style="color: #f1c40f;">Halo, <span id="lbl-username"></span> | Saldo: <span id="lbl-balance">0</span></h2>
             <div class="room-panel">
                 <div class="panel-card">
-                    <h3 style="font-size: 13px; margin-top:0; color:#f1c40f;">Buat Room Baru</h3>
-                    <label>ID Room</label><input type="text" id="create-room-id" placeholder="Contoh: room17">
-                    <button onclick="createRoom()">Buat Room (Bandar)</button>
+                    <h3>Buat Room Baru</h3>
+                    <label>ID Room</label><input type="text" id="create-room-id" placeholder="room17">
+                    <button onclick="createRoom()">Buat Room</button>
                 </div>
                 <div class="panel-card">
-                    <h3 style="font-size: 13px; margin-top:0; color:#10b981;">Gabung Room Manual</h3>
-                    <label>ID Room</label><input type="text" id="join-room-id" placeholder="ID Room teman">
-                    <button onclick="joinRoom()" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">Gabung</button>
+                    <h3>Gabung Room</h3>
+                    <label>ID Room</label><input type="text" id="join-room-id" placeholder="room17">
+                    <button onclick="joinRoom()" style="background:#10b981; color:white;">Gabung</button>
                 </div>
             </div>
-
-            <div class="room-panel" style="margin-top: 10px;">
-                <div class="panel-card" style="max-width: 480px;">
-                    <h3 style="font-size: 12px; margin:0; color:#38bdf8;">🌐 Room Aktif yang Tersedia</h3>
-                    <div class="lobby-scroll-box" id="active-rooms-list">Memuat daftar room...</div>
+            <div class="room-panel" style="margin-top:10px;">
+                <div class="panel-card" style="max-width:480px;">
+                    <h3>🌐 Room Aktif</h3>
+                    <div class="lobby-scroll-box" id="active-rooms-list">Memuat...</div>
                 </div>
-                <div class="panel-card" style="max-width: 480px;">
-                    <h3 style="font-size: 12px; margin:0; color:#f59e0b;">📜 Histori Permainan Anda</h3>
-                    <div class="lobby-scroll-box" id="player-history-list">Memuat histori...</div>
+                <div class="panel-card" style="max-width:480px;">
+                    <h3>📜 Histori Anda</h3>
+                    <div class="lobby-scroll-box" id="player-history-list">Memuat...</div>
                 </div>
             </div>
-            <div id="lobby-msg" style="color:#ef4444; margin-top:10px; font-weight:600; font-size:11px;"></div>
         </div>
 
         <!-- GAME ROOM SECTION -->
         <div id="game-wrapper">
             <div class="room-header-bar">
-                <div><span>Room:</span> <strong id="current-room-lbl" style="color:#f1c40f;">-</strong></div>
-                <div><span>Bandar:</span> <strong id="current-host-lbl" style="color:#10b981;">-</strong></div>
-                <div><span>🪙 Saldo Anda:</span> <strong id="game-live-balance" style="color:#10b981;">0</strong></div>
+                <div>Room: <strong id="current-room-lbl" style="color:#f1c40f;">-</strong></div>
+                <div>Bandar: <strong id="current-host-lbl" style="color:#10b981;">-</strong></div>
+                <div>Saldo Anda: <strong id="game-live-balance" style="color:#10b981;">0</strong></div>
             </div>
             
             <div class="casino-table" id="casino-table-theme">
                 <div class="dealer-box-ui">
-                    <div style="font-size:12px; font-weight:700; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
-                    <div style="font-size:10px; color:#9ca3af;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
+                    <div style="color:#f1c40f; font-weight:700;">👑 DEALER (Total: <span id="dealer-score-lbl">0</span>)</div>
                     <div class="cards-container" id="dealer-cards"></div>
                 </div>
-
                 <div>
-                    <div style="font-size:11px; font-weight:700; color:#38bdf8; margin-bottom:6px; text-align:left;">👥 MEJA PEMAIN</div>
+                    <div style="color:#38bdf8; font-weight:700; text-align:left;">👥 PEMAIN</div>
                     <div class="players-box-grid" id="room-players-list"></div>
                 </div>
             </div>
 
-            <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.08);">
+            <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px;">
                 <div id="betting-controls">
-                    <label>🪙 Taruhan Chip Dipilih: <b id="selected-bet-display" style="color:#f1c40f;">1.000</b></label>
+                    <label>Pilih Chip Taruhan: <b id="selected-bet-display" style="color:#f1c40f;">1.000</b></label>
                     <div class="chip-container">
                         <div class="casino-chip chip-1k" onclick="selectChip(1000)">1K</div>
                         <div class="casino-chip chip-5k" onclick="selectChip(5000)">5K</div>
@@ -292,56 +112,22 @@
                         <div class="casino-chip chip-100k" onclick="selectChip(100000)">100K</div>
                         <div class="casino-chip chip-1m" onclick="selectChip(1000000)">1M</div>
                     </div>
-                    <div style="display:flex; gap:6px; justify-content:center; margin-top:4px;">
-                        <button onclick="resetBet()" style="background:#374151; color:white; max-width:100px; padding:7px; font-size:11px; margin:0;">Reset (1K)</button>
-                        <button onclick="toggleReady()" id="ready-btn" style="max-width:180px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; margin:0; padding:7px;">SIAP (Ready)</button>
+                    <div style="display:flex; gap:6px; justify-content:center;">
+                        <button onclick="resetBet()" style="background:#374151; color:white; max-width:100px;">Reset</button>
+                        <button onclick="toggleReady()" id="ready-btn" style="background:#10b981; color:white; max-width:180px;">SIAP (Ready)</button>
                     </div>
                 </div>
-
-                <!-- Panel Topup Otomatis Jika Hutang Mencapai -10 Juta -->
-                <div id="topup-panel" style="display:none; text-align:center; padding:5px;">
-                    <p style="color:#ef4444; font-size:11px; margin:0 0 6px 0;"><b>⚠️ BATAS HUTANG MAKSIMAL (-10 Juta) TERCAPAI!</b></p>
-                    <button onclick="sendTopupRequest()" style="background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color:white; max-width:220px; padding:8px; font-size:11px;">Minta Saldo (Request Topup)</button>
-                </div>
-                
-                <div id="host-controls" style="margin-top:6px; display:none;">
-                    <button onclick="startGame()" id="start-game-btn" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; max-width:160px; display:inline-block; padding:7px;">Mulai Kartu</button>
-                    <div id="host-dealer-action-btns" style="display:none; margin-top:4px;">
-                        <button onclick="dealerHit()" id="dealer-hit-btn" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white; max-width:120px; display:inline-block; padding:6px;">Bandar Hit</button>
-                        <button onclick="dealerStand()" id="dealer-stand-btn" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; max-width:120px; display:inline-block; padding:6px;">Bandar Stand</button>
-                    </div>
-                </div>
-
-                <div style="margin-top: 8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                    <button onclick="requestEndGame()" id="end-game-btn" style="background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color:white; max-width:150px; font-size:11px; padding:7px;">Akhiri Game</button>
-                    <button onclick="hostForceEndGame()" id="host-force-end-btn" style="background:linear-gradient(135deg, #d97706 0%, #b45309 100%); color:white; max-width:170px; display:none; font-size:11px; padding:7px;">Paksa Akhiri</button>
-                    <span id="end-game-status" style="font-size:10px; color:#f1c40f; display:block; width:100%; margin-top:2px; font-weight:600;"></span>
+                <div id="host-controls" style="display:none;">
+                    <button onclick="startGame()" style="background:#f59e0b; color:white; max-width:160px;">Mulai Kartu</button>
                 </div>
             </div>
 
-            <!-- TOMBOL AKSI PEMAIN -->
             <div id="action-panel" style="display:none; margin-top:10px;">
-                <p id="turn-notice" style="color:#f59e0b; font-weight:700; font-size:12px; margin-bottom:5px;"></p>
                 <div style="display:flex; gap:6px; justify-content:center;">
-                    <button onclick="sendAction('hit')" style="background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px;">Hit</button>
-                    <button onclick="sendAction('stand')" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px;">Stand</button>
-                    <button onclick="sendAction('double')" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px;">Double</button>
-                    <button id="split-btn" onclick="sendAction('split')" style="background:linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color:white; width:65px; margin:0; padding:7px; font-size:11px; display:none;">Split</button>
-                </div>
-            </div>
-
-            <div class="room-panel" style="margin-top:10px;">
-                <div class="panel-card" style="padding:10px; max-width: 100%;">
-                    <h3 style="margin:0 0 4px 0; font-size:12px; color:#f1c40f;">📊 Status Ronde</h3>
-                    <p id="round-status-text" style="color:#e5e7eb; font-weight:600; font-size:10px; margin:0;">Menunggu pemain siap...</p>
-                </div>
-                <div class="panel-card" style="padding:10px; max-width: 100%;">
-                    <h3 style="margin:0 0 4px 0; font-size:12px; color:#38bdf8;">💬 Chat Room</h3>
-                    <div class="chat-box" id="chat-messages"></div>
-                    <div style="display:flex; gap:6px;">
-                        <input type="text" id="chat-input" placeholder="Tulis pesan..." onkeypress="checkEnter(event)" style="margin:0; font-size:11px; padding:6px;">
-                        <button onclick="sendChat()" style="width:60px; margin:0; padding:6px; font-size:11px; background:linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color:white;">Kirim</button>
-                    </div>
+                    <button onclick="sendAction('hit')" style="background:#3b82f6; color:white; width:70px;">Hit</button>
+                    <button onclick="sendAction('stand')" style="background:#ef4444; color:white; width:70px;">Stand</button>
+                    <button onclick="sendAction('double')" style="background:#10b981; color:white; width:70px;">Double</button>
+                    <button id="split-btn" onclick="sendAction('split')" style="background:#a855f7; color:white; width:70px; display:none;">Split</button>
                 </div>
             </div>
         </div>
@@ -350,18 +136,12 @@
     <script>
         const socket = io();
         const API_URL = '/api';
-        let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
-        let currentBetAmount = 1000; // Default taruhan awal
+        let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false };
+        let currentBetAmount = 1000;
 
-        // Fungsi pemilihan chip langsung
         function selectChip(amount) {
-            if (myData.isReady) return; // Terkunci jika sudah ready
-            if (amount > 10000000) {
-                currentBetAmount = 10000000;
-                alert("Batas maksimal taruhan adalah 10.000.000 poin!");
-            } else {
-                currentBetAmount = amount;
-            }
+            if (myData.isReady) return;
+            currentBetAmount = amount > 10000000 ? 10000000 : amount;
             document.getElementById('selected-bet-display').innerText = formatNumber(currentBetAmount);
         }
 
@@ -371,280 +151,7 @@
             document.getElementById('selected-bet-display').innerText = formatNumber(currentBetAmount);
         }
 
-        let audioCtx = null;
-        let bgmPlaying = false;
-        let bgmInterval = null;
-
-        function toggleBGM() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            bgmPlaying = !bgmPlaying;
-            let btn = document.getElementById('bgm-toggle-btn');
-            if (bgmPlaying) {
-                btn.innerText = "🔊 Musik: ON";
-                startBGM();
-            } else {
-                btn.innerText = "🔇 Musik: OFF";
-                stopBGM();
-            }
-        }
-
-        function startBGM() {
-            if (bgmInterval) clearInterval(bgmInterval);
-            const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
-            let idx = 0;
-            bgmInterval = setInterval(() => {
-                if (!bgmPlaying || !audioCtx) return;
-                try {
-                    let osc = audioCtx.createOscillator();
-                    let gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(notes[idx % notes.length], audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.8);
-                    idx++;
-                } catch(e) {}
-            }, 600);
-        }
-
-        function stopBGM() {
-            if (bgmInterval) clearInterval(bgmInterval);
-        }
-
-        let localStream = null;
-        let micActive = false;
-        let peerConnections = {};
-        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-
-        async function toggleMic() {
-            let btn = document.getElementById('mic-toggle-btn');
-            if (!micActive) {
-                try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    micActive = true;
-                    btn.innerText = "🎙️ Mic: ON";
-                    btn.style.background = "#10b981";
-                    socket.emit('join_room', { roomId: myData.roomId, username: myData.username, balance: myData.balance });
-                } catch (e) {
-                    alert("Gagal mengakses mikrofon: " + e.message);
-                }
-            } else {
-                if (localStream) {
-                    localStream.getTracks().forEach(track => track.stop());
-                }
-                localStream = null;
-                micActive = false;
-                btn.innerText = "🎙️ Mic: OFF";
-                btn.style.background = "";
-            }
-        }
-
-        socket.on('peer_joined', async ({ peerId }) => {
-            if (!micActive || !localStream) return;
-            try {
-                let pc = createPeerConnection(peerId);
-                let offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                socket.emit('webrtc_offer', { target: peerId, offer });
-            } catch (e) { console.error("WebRTC Offer error:", e); }
-        });
-
-        socket.on('webrtc_offer', async ({ sender, offer }) => {
-            if (!micActive) return;
-            try {
-                let pc = createPeerConnection(sender);
-                await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                let answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                socket.emit('webrtc_answer', { target: sender, answer });
-            } catch (e) { console.error("WebRTC Answer error:", e); }
-        });
-
-        socket.on('webrtc_answer', async ({ sender, answer }) => {
-            let pc = peerConnections[sender];
-            if (pc) {
-                await pc.setRemoteDescription(new RTCSessionDescription(answer));
-            }
-        });
-
-        socket.on('webrtc_ice_candidate', async ({ sender, candidate }) => {
-            let pc = peerConnections[sender];
-            if (pc && candidate) {
-                await pc.addIceCandidate(new RTCIceCandidate(candidate));
-            }
-        });
-
-        socket.on('peer_disconnected', ({ peerId }) => {
-            if (peerConnections[peerId]) {
-                peerConnections[peerId].close();
-                delete peerConnections[peerId];
-            }
-        });
-
-        function createPeerConnection(peerId) {
-            if (peerConnections[peerId]) return peerConnections[peerId];
-            let pc = new RTCPeerConnection(rtcConfig);
-            peerConnections[peerId] = pc;
-
-            if (localStream) {
-                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-            }
-
-            pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    socket.emit('webrtc_ice_candidate', { target: peerId, candidate: event.candidate });
-                }
-            };
-
-            pc.ontrack = (event) => {
-                let remoteAudio = document.createElement('audio');
-                remoteAudio.srcObject = event.streams[0];
-                remoteAudio.autoplay = true;
-                document.body.appendChild(remoteAudio);
-            };
-
-            return pc;
-        }
-
-        function showPopupBanner(text) {
-            let banner = document.getElementById('popup-banner');
-            banner.innerText = text;
-            banner.classList.add('show');
-            setTimeout(() => {
-                banner.classList.remove('show');
-            }, 3000);
-        }
-
-        const tableThemes = [
-            "radial-gradient(circle at center, #064e3b 0%, #022c22 100%)",
-            "radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%)",
-            "radial-gradient(circle at center, #581c87 0%, #3b0764 100%)",
-            "radial-gradient(circle at center, #7f1d1d 0%, #450a0a 100%)"
-        ];
-
-        function applyRandomTableTheme() {
-            let randomTheme = tableThemes[Math.floor(Math.random() * tableThemes.length)];
-            document.getElementById('casino-table-theme').style.background = randomTheme;
-        }
-
-        function playBlackjackSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.4);
-            } catch(e) {}
-        }
-
-        function formatNumber(num) {
-            return Number(num || 0).toLocaleString('id-ID');
-        }
-
-        async function fetchLobbyData() {
-            if (!myData.username) return;
-            try {
-                let resRooms = await fetch(`${API_URL}/rooms/active`);
-                let roomsList = await resRooms.json();
-                let roomsContainer = document.getElementById('active-rooms-list');
-                if (roomsList.length === 0) {
-                    roomsContainer.innerHTML = `<span style="color:#9ca3af;">Tidak ada room aktif saat ini.</span>`;
-                } else {
-                    roomsContainer.innerHTML = roomsList.map(r => `
-                        <div class="room-item-row">
-                            <span><b>Room: ${r.roomId}</b> (Bandar: ${r.hostUsername}) - ${r.playerCount} Pemain</span>
-                            <button onclick="joinActiveRoom('${r.roomId}')" style="width:auto; padding:3px 8px; font-size:10px; margin:0;">Gabung</button>
-                        </div>
-                    `).join('');
-                }
-
-                let resHist = await fetch(`${API_URL}/history?username=${myData.username}`);
-                let histList = await resHist.json();
-                let histContainer = document.getElementById('player-history-list');
-                if (histList.length === 0) {
-                    histContainer.innerHTML = `<span style="color:#9ca3af;">Belum ada histori permainan.</span>`;
-                } else {
-                    histContainer.innerHTML = histList.map(h => {
-                        let color = h.pointsChange > 0 ? '#10b981' : (h.pointsChange < 0 ? '#ef4444' : '#f59e0b');
-                        let sign = h.pointsChange > 0 ? '+' : '';
-                        return `<div style="padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                            [Room: ${h.roomNumber}] <b style="color:${color};">${h.result}</b> (${sign}${formatNumber(h.pointsChange)})
-                        </div>`;
-                    }).join('');
-                }
-            } catch (e) {
-                console.error("Gagal mengambil data lobby:", e);
-            }
-        }
-
-        function joinActiveRoom(roomId) {
-            localStorage.setItem('bj_room', roomId);
-            socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
-        }
-
-        socket.on('connect', () => {
-            let dot = document.getElementById('signal-dot');
-            let text = document.getElementById('signal-text');
-            dot.className = 'signal-dot signal-green';
-            text.innerText = 'Online';
-
-            let savedRoom = localStorage.getItem('bj_room');
-            let savedUser = localStorage.getItem('bj_user');
-
-            if (savedUser) {
-                myData.username = savedUser;
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('lbl-username').innerText = myData.username;
-                document.getElementById('lobby-avatar-icon').innerText = myData.username.charAt(0).toUpperCase();
-                
-                if (savedRoom && !myData.roomId) {
-                    document.getElementById('lobby-section').style.display = 'none';
-                    socket.emit('join_room', { roomId: savedRoom, username: savedUser, balance: myData.balance });
-                } else {
-                    document.getElementById('lobby-section').style.display = 'block';
-                    document.getElementById('game-wrapper').style.display = 'none';
-                    fetchLobbyData();
-                }
-            } else {
-                document.getElementById('auth-section').style.display = 'block';
-            }
-        });
-
-        socket.on('room_error', (msg) => { 
-            alert(msg); 
-            document.getElementById('lobby-msg').innerText = msg; 
-            localStorage.removeItem('bj_room');
-            myData.roomId = '';
-            document.getElementById('game-wrapper').style.display = 'none';
-            if (localStorage.getItem('bj_user')) {
-                document.getElementById('lobby-section').style.display = 'block';
-                fetchLobbyData();
-            } else {
-                document.getElementById('auth-section').style.display = 'block';
-            }
-        });
-
-        socket.on('disconnect', () => {
-            let dot = document.getElementById('signal-dot');
-            let text = document.getElementById('signal-text');
-            dot.className = 'signal-dot signal-red';
-            text.innerText = 'Offline';
-        });
+        function formatNumber(num) { return Number(num || 0).toLocaleString('id-ID'); }
 
         async function registerUser() {
             let u = document.getElementById('username').value;
@@ -663,365 +170,66 @@
             if (data.success) {
                 myData.username = data.player.username;
                 myData.balance = data.player.balance;
-                localStorage.setItem('bj_user', myData.username);
                 document.getElementById('auth-section').style.display = 'none';
                 document.getElementById('lobby-section').style.display = 'block';
                 document.getElementById('lbl-username').innerText = myData.username;
                 document.getElementById('lbl-balance').innerText = formatNumber(myData.balance);
-                document.getElementById('lobby-avatar-icon').innerText = myData.username.charAt(0).toUpperCase();
                 fetchLobbyData();
             } else {
                 document.getElementById('auth-msg').innerText = data.message;
             }
         }
 
+        async function fetchLobbyData() {
+            let resRooms = await fetch(`${API_URL}/rooms/active`);
+            let roomsList = await resRooms.json();
+            document.getElementById('active-rooms-list').innerHTML = roomsList.length === 0 ? 'Tidak ada room.' : roomsList.map(r => `<div>Room: ${r.roomId} (${r.playerCount} pemain) <button onclick="joinActive('${r.roomId}')">Gabung</button></div>`).join('');
+        }
+
+        function joinActive(roomId) {
+            socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
+        }
+
         function createRoom() {
             let roomId = document.getElementById('create-room-id').value.trim();
-            if(!roomId) { alert("Masukkan ID Room!"); return; }
-            localStorage.setItem('bj_room', roomId);
+            if(!roomId) return alert("Masukkan ID Room!");
             socket.emit('create_room', { roomId, username: myData.username, balance: myData.balance });
         }
 
         function joinRoom() {
             let roomId = document.getElementById('join-room-id').value.trim();
-            if(!roomId) { alert("Masukkan ID Room!"); return; }
-            localStorage.setItem('bj_room', roomId);
+            if(!roomId) return alert("Masukkan ID Room!");
             socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
         }
-        
-        socket.on('kicked_from_room', (msg) => {
-            alert(msg);
-            localStorage.removeItem('bj_room');
-            location.reload();
-        });
 
         socket.on('room_joined', ({ roomId, isHost, hostUsername }) => {
             myData.roomId = roomId;
-            myData.isHost = (hostUsername === myData.username);
-            
-            document.getElementById('auth-section').style.display = 'none';
+            myData.isHost = isHost;
             document.getElementById('lobby-section').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'none';
             document.getElementById('game-wrapper').style.display = 'block';
-            
             document.getElementById('current-room-lbl').innerText = roomId;
             document.getElementById('current-host-lbl').innerText = hostUsername;
-            document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
-            
-            applyRandomTableTheme();
-            
-            if(myData.isHost) {
-                document.getElementById('host-controls').style.display = 'block';
-                document.getElementById('betting-controls').style.display = 'none';
-                document.getElementById('host-force-end-btn').style.display = 'inline-block';
-            } else {
-                document.getElementById('host-controls').style.display = 'none';
-                document.getElementById('betting-controls').style.display = 'block';
-                document.getElementById('host-force-end-btn').style.display = 'none';
-            }
+            document.getElementById('host-controls').style.display = isHost ? 'block' : 'none';
+            document.getElementById('betting-controls').style.display = isHost ? 'none' : 'block';
         });
 
         function toggleReady() {
             myData.isReady = !myData.isReady;
-            let bet = currentBetAmount;
             let btn = document.getElementById('ready-btn');
             btn.innerText = myData.isReady ? "BATAL SIAP" : "SIAP (Ready)";
-            btn.style.background = myData.isReady ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)";
-            socket.emit('set_ready', { roomId: myData.roomId, bet, ready: myData.isReady });
+            socket.emit('set_ready', { roomId: myData.roomId, bet: currentBetAmount, ready: myData.isReady });
         }
-
-        function sendTopupRequest() {
-            socket.emit('request_topup', { username: myData.username });
-            alert("Permintaan Topup telah dikirim ke Admin!");
-        }
-
-        function requestEndGame() {
-            myData.hasAgreedEnd = true;
-            let btn = document.getElementById('end-game-btn');
-            btn.innerText = "Setuju Keluar ✓";
-            btn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
-            socket.emit('request_end_game', myData.roomId);
-        }
-
-        function hostForceEndGame() {
-            if (confirm("Paksa akhiri permainan?")) {
-                socket.emit('host_force_end_game', myData.roomId);
-            }
-        }
-
-        socket.on('game_ended_permanently', (msg) => {
-            alert(msg);
-            localStorage.removeItem('bj_room');
-            location.reload();
-        });
 
         function startGame() { socket.emit('start_game', myData.roomId); }
-        function kickPlayer(username) {
-            if (confirm(`Keluarkan ${username} dari meja?`)) {
-                socket.emit('kick_player', { roomId: myData.roomId, usernameToKick: username });
-            }
-        }
+        function sendAction(action) { socket.emit('player_action', { roomId: myData.roomId, handIndex: 0, action }); }
 
-        function sendAction(action) {
-            let activePlayer = window.currentRoomState?.players[window.currentRoomState.currentTurnPlayerIndex];
-            if (!activePlayer) return;
-            let handIndex = window.currentRoomState.currentTurnHandIndex || 0;
-            socket.emit('player_action', { roomId: myData.roomId, handIndex, action });
-        }
-
-        function dealerHit() { socket.emit('player_action', { roomId: myData.roomId, handIndex: 0, action: 'dealer_hit' }); }
-        function dealerStand() { socket.emit('player_action', { roomId: myData.roomId, handIndex: 0, action: 'dealer_stand' }); }
-
-        socket.on('update_room_state', (room) => { 
-            window.currentRoomState = room;
-            document.getElementById('current-host-lbl').innerText = room.hostUsername;
-            
-            myData.isHost = (room.hostUsername === myData.username);
-            
-            if(myData.isHost) {
-                document.getElementById('host-controls').style.display = 'block';
-                document.getElementById('betting-controls').style.display = 'none';
-                document.getElementById('host-force-end-btn').style.display = 'inline-block';
-            } else {
-                document.getElementById('host-controls').style.display = 'none';
-                document.getElementById('host-force-end-btn').style.display = 'none';
-            }
-            
-            let me = room.players.find(p => p.username === myData.username);
-            if (me) {
-                myData.balance = me.balance;
-                document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
-                
-                let bettingControls = document.getElementById('betting-controls');
-                let topupPanel = document.getElementById('topup-panel');
-                if (me.balance <= -10000000 && !myData.isHost) {
-                    bettingControls.style.display = 'none';
-                    topupPanel.style.display = 'block';
-                } else if (!myData.isHost) {
-                    bettingControls.style.display = 'block';
-                    topupPanel.style.display = 'none';
-                }
-            }
-
-            if (room.endGameAgrees) {
-                document.getElementById('end-game-status').innerText = `Setuju Akhiri: ${room.endGameAgrees.length} / ${room.players.length}`;
-            }
-
-            if (myData.isHost) {
-                let startBtn = document.getElementById('start-game-btn');
-                let bettingPlayers = room.players.filter(p => p.socketId !== room.hostSocketId);
-                let allReady = bettingPlayers.length > 0 && bettingPlayers.every(p => p.ready === true);
-                let canStart = !room.gameStarted && allReady;
-                startBtn.style.opacity = canStart ? "1" : "0.5";
-                startBtn.disabled = !canStart;
-            }
-
-            renderRoom(room); 
-        });
-
-        socket.on('game_started', (room) => {
-            window.currentRoomState = room;
-            document.getElementById('round-status-text').innerText = "Game Sedang Berlangsung...";
+        socket.on('update_room_state', (room) => {
             let me = room.players.find(p => p.username === myData.username);
             if (me) {
                 myData.balance = me.balance;
                 document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
             }
-            renderRoom(room);
-        });
-
-        socket.on('round_ended', (room) => {
-            window.currentRoomState = room;
-            document.getElementById('action-panel').style.display = 'none';
-            if(!myData.isHost && myData.balance > -10000000) document.getElementById('betting-controls').style.display = 'block';
-            myData.isReady = false;
-            let btn = document.getElementById('ready-btn');
-            if(btn) { btn.innerText = "SIAP (Ready)"; btn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)"; }
-
-            let me = room.players.find(p => p.username === myData.username);
-            if (me) {
-                myData.balance = me.balance;
-                document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
-            }
-
-            let winnerNames = [];
-            let summary = room.players.filter(p => p.socketId !== room.hostSocketId).map(p => {
-                let resStr = p.roundResults ? p.roundResults.join(' & ') : '';
-                if (resStr.includes('WIN')) {
-                    playBlackjackSound();
-                    winnerNames.push(p.username);
-                }
-                return `${p.username}: [${resStr}]`;
-            }).join(' | ');
-
-            if (winnerNames.length > 0) {
-                showPopupBanner(`🎉 Pemenang Ronde: ${winnerNames.join(', ')}!`);
-            }
-
-            document.getElementById('round-status-text').innerText = `Hasil Akhir: ${summary || 'Selesai'}`;
-            renderRoom(room, false);
-        });
-
-        function renderRoom(room, showAllDealer = false) {
-            let dContainer = document.getElementById('dealer-cards');
-            dContainer.innerHTML = '';
-            
-            let dScore = calculateScore(room.dealerHand);
-            document.getElementById('dealer-score-lbl').innerText = (room.dealerDone || showAllDealer || myData.isHost) ? dScore : '??';
-
-            if (room.dealerHand && room.dealerHand.length > 0 && room.gameStarted) {
-                room.dealerHand.forEach((c, idx) => {
-                    let hide = (idx === 0 && !showAllDealer && !myData.isHost && !room.dealerDone);
-                    let cardEl = createCardUI(c, hide);
-                    cardEl.style.animationDelay = `${idx * 0.15}s`;
-                    dContainer.appendChild(cardEl);
-                });
-            }
-
-            let hostActionDiv = document.getElementById('host-dealer-action-btns');
-            let bettingPlayers = room.players.filter(p => p.socketId !== room.hostSocketId);
-            
-            if (myData.isHost && room.gameStarted && room.dealerDone && bettingPlayers.length > 0) {
-                hostActionDiv.style.display = 'block';
-                let hitBtn = document.getElementById('dealer-hit-btn');
-                hitBtn.style.opacity = (dScore >= 17) ? '0.5' : '1';
-                hitBtn.innerText = (dScore >= 17) ? "Limit (>=17)" : "Bandar Hit";
-            } else {
-                hostActionDiv.style.display = 'none';
-            }
-
-            let pList = document.getElementById('room-players-list');
-            pList.innerHTML = '';
-
-            let activePlayer = room.gameStarted && room.players ? room.players[room.currentTurnPlayerIndex] : null;
-            let currentHandIdx = room.currentTurnHandIndex || 0;
-            let isMyTurn = Boolean(activePlayer && activePlayer.socketId === socket.id && activePlayer.statuses[currentHandIdx] === 'playing');
-
-            room.players.forEach((p, pIdx) => {
-                if (p.socketId === room.hostSocketId) return;
-
-                let mainStatusClass = p.ready ? 'ready-true' : 'ready-false';
-                let isCurrentTurnPlayer = (room.gameStarted && room.currentTurnPlayerIndex === pIdx);
-                if (isCurrentTurnPlayer) mainStatusClass += ' turn-active';
-
-                let handsHtml = '';
-                p.hands.forEach((hand, hIdx) => {
-                    let handScore = calculateScore(hand);
-                    let isBJ = hand.length === 2 && handScore === 21;
-                    let bjBadge = isBJ ? `<div class="bj-badge">★ BLACKJACK! ★</div>` : '';
-                    let isBust = (p.statuses[hIdx] === 'bust' || handScore > 21);
-                    
-                    let isThisHandTurn = (isCurrentTurnPlayer && currentHandIdx === hIdx && room.gameStarted);
-
-                    let splitBoxClass = isThisHandTurn ? 'split-hand-box split-hand-active' : 'split-hand-box';
-                    if (isBust) splitBoxClass += ' bust-card';
-
-                    let labelTitle = p.hands.length > 1 ? `<span>${p.username} <b style="color:#f59e0b;">(Hand ${hIdx + 1})</b></span>` : `<span>${p.username}</span>`;
-
-                    let cardsHtml = '<div class="cards-container">';
-                    if (room.gameStarted) {
-                        hand.forEach((c, cIdx) => {
-                            let cardEl = createCardUI(c, isBust && showAllDealer);
-                            cardEl.style.animationDelay = `${cIdx * 0.15}s`;
-                            cardsHtml += cardEl.outerHTML;
-                        });
-                    }
-                    cardsHtml += '</div>';
-
-                    handsHtml += `
-                        <div class="${splitBoxClass}">
-                            ${bjBadge}
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #e5e7eb; padding: 0 4px;">
-                                ${labelTitle}
-                                <span style="color: #38bdf8;">Skor: ${handScore}</span>
-                            </div>
-                            ${cardsHtml}
-                            <div style="font-size: 9px; color: #9ca3af; margin-top: 3px;">
-                                Status: <span style="color: #f59e0b; font-weight: 600;">${room.gameStarted ? p.statuses[hIdx] : (p.ready ? 'SIAP' : 'Menunggu')}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                let kickBtnHtml = (myData.isHost && !room.gameStarted) ? `<button onclick="kickPlayer('${p.username}')" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; padding:4px 8px; font-size:9px; margin-top:6px; width:auto; border-radius:4px;">Kick Pemain</button>` : '';
-                let balanceColor = p.balance < 0 ? '#ef4444' : '#10b981';
-
-                pList.innerHTML += `
-                    <div class="player-chip ${mainStatusClass}">
-                        <div style="font-size: 11px; font-weight: 700; color: #f1c40f; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
-                            <span>👤 ${p.username}</span>
-                            <span style="color: ${balanceColor}; font-size: 10px;">🪙 ${formatNumber(p.balance)}</span>
-                        </div>
-                        <div style="font-size: 9px; color: #9ca3af; margin-bottom: 6px;">Taruhan: <b style="color:white;">🪙 ${formatNumber(p.bet)}</b></div>
-                        ${handsHtml}
-                        ${kickBtnHtml}
-                    </div>
-                `;
-            });
-
-            let actionPanel = document.getElementById('action-panel');
-            actionPanel.style.display = isMyTurn ? 'block' : 'none';
-            if (isMyTurn) {
-                document.getElementById('turn-notice').innerText = "⚡ Giliran Anda untuk Memilih Aksi!";
-                
-                let canSplit = false;
-                let currentHand = activePlayer.hands[currentHandIdx];
-                if (currentHand && currentHand.length === 2 && activePlayer.splitCount < 4) {
-                    let val1 = currentHand[0].split('-')[0];
-                    let val2 = currentHand[1].split('-')[0];
-                    if (val1 === val2 || (['10','J','Q','K'].includes(val1) && ['10','J','Q','K'].includes(val2))) {
-                        canSplit = true;
-                    }
-                }
-                document.getElementById('split-btn').style.display = canSplit ? 'inline-block' : 'none';
-            }
-        }
-
-        function calculateScore(hand) {
-            let score = 0, aces = 0;
-            for (let card of hand) {
-                let val = card.split("-")[0];
-                if (val === "A") { aces++; score += 11; }
-                else if (["J", "Q", "K"].includes(val)) { score += 10; }
-                else { score += parseInt(val); }
-            }
-            while (score > 21 && aces > 0) { score -= 10; aces--; }
-            return score;
-        }
-
-        function createCardUI(cardData, isClosed = false) {
-            let cardDiv = document.createElement("div"); 
-            if (isClosed) {
-                cardDiv.className = "card closed-card";
-                cardDiv.innerText = "?";
-                return cardDiv;
-            }
-
-            let data = cardData.split("-");
-            let value = data[0], type = data[1];
-            cardDiv.className = "card";
-            if (type === "D" || type === "H") cardDiv.classList.add("red-suit");
-
-            let suitSymbol = type === "S" ? "&spades;" : (type === "C" ? "&clubs;" : (type === "H" ? "&hearts;" : "&diams;"));
-            cardDiv.innerHTML = `
-                <div class="card-top">${value}</div>
-                <div class="card-center">${suitSymbol}</div>
-                <div class="card-bottom">${value}</div>
-            `;
-            return cardDiv;
-        }
-
-        function sendChat() {
-            let input = document.getElementById('chat-input');
-            if(!input.value.trim()) return;
-            socket.emit('send_chat', { roomId: myData.roomId, username: myData.username, message: input.value });
-            input.value = '';
-        }
-        function checkEnter(e) { if(e.key === 'Enter') sendChat(); }
-        
-        socket.on('receive_chat', (data) => {
-            let box = document.getElementById('chat-messages');
-            box.innerHTML += `<div><b>${data.username}:</b> ${data.message}</div>`;
-            box.scrollTop = box.scrollHeight;
         });
     </script>
 </body>
