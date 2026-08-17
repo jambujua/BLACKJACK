@@ -3,36 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin - Blackjack 17-an</title>
+    <title>Panel Admin - Blackjack</title>
     <style>
         body { font-family: Arial, sans-serif; background: #1e1e2f; margin: 0; padding: 20px; color: #fff; }
-        .container { max-width: 1000px; margin: 0 auto; background: #2a2a40; padding: 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .container { max-width: 1000px; margin: 0 auto; background: #2a2a40; padding: 20px; border-radius: 8px; }
         h2 { text-align: center; color: #ffc107; }
         .section { margin-top: 25px; background: #32324e; padding: 15px; border-radius: 6px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #444; font-size: 13px; }
         th { background: #3f3f63; color: #ffc107; }
-        button { padding: 5px 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        button { padding: 5px 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .btn-acc { background: #28a745; color: white; }
         .btn-edit { background: #17a2b8; color: white; }
         .btn-del { background: #dc3545; color: white; }
-        .btn-history { background: #f39c12; color: white; }
-        input[type="number"], input[type="text"] { width: 80px; padding: 4px; border-radius: 4px; border: 1px solid #555; background: #1e1e2f; color: white; }
+        input[type="number"] { width: 90px; padding: 4px; background: #1e1e2f; color: white; border: 1px solid #555; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>⚙️ Panel Kontrol Admin & Database</h2>
+    <h2>⚙️ Panel Kontrol Admin</h2>
 
     <div class="section">
-        <h3>🔔 Permintaan Akun & Request Topup Koin</h3>
+        <h3>🔔 Permintaan Akun & Request Topup</h3>
         <div id="pending-container">Memuat...</div>
     </div>
 
     <div class="section">
         <h3>👥 Data Seluruh Pemain</h3>
-        <button onclick="loadAllPlayers()" style="background: #ffc107; color: black; margin-bottom: 10px; padding: 8px 12px;">Refresh Data</button>
+        <button onclick="loadAllPlayers()" style="background: #ffc107; color: black; margin-bottom: 10px;">Refresh Data</button>
         <table>
             <thead>
                 <tr>
@@ -40,31 +39,11 @@
                     <th>Status</th>
                     <th>Saldo Poin</th>
                     <th>Aksi Saldo</th>
-                    <th>Opsi Lain</th>
+                    <th>Opsi</th>
                 </tr>
             </thead>
             <tbody id="all-players-body"><tr><td colspan="5" style="text-align: center;">Memuat...</td></tr></tbody>
         </table>
-    </div>
-
-    <div class="section">
-        <h3>📊 Riwayat (History) Permainan <span id="history-title" style="color:#f1c40f;">(Global)</span></h3>
-        <button onclick="loadHistory()" style="background: #ffc107; color: black; margin-bottom: 10px; padding: 6px 12px;">Tampilkan Semua History</button>
-        <div style="max-height: 250px; overflow-y: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Waktu</th>
-                        <th>Username</th>
-                        <th>Room</th>
-                        <th>Hasil</th>
-                        <th>Poin</th>
-                        <th>Durasi</th>
-                    </tr>
-                </thead>
-                <tbody id="history-body"><tr><td colspan="6" style="text-align: center;">Memuat riwayat...</td></tr></tbody>
-            </table>
-        </div>
     </div>
 </div>
 
@@ -74,7 +53,6 @@
     async function loadAllPlayers() {
         try {
             const res = await fetch(`${API_URL}/admin/all-players`);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             const players = await res.json();
             
             const pendingContainer = document.getElementById('pending-container');
@@ -83,22 +61,18 @@
             if (needsAcc.length === 0) {
                 pendingContainer.innerHTML = '<p style="color: #8f8;">Tidak ada permintaan baru.</p>';
             } else {
-                let pendingHtml = '<table><tr><th>Username</th><th>Keterangan</th><th>Aksi</th></tr>';
+                let html = '<table><tr><th>Username</th><th>Keterangan</th><th>Aksi</th></tr>';
                 needsAcc.forEach(p => {
-                    let ket = p.status === 'pending' ? 'Belum Di-ACC' : '⚠️ Request Topup Koin!';
-                    pendingHtml += `<tr><td><b>${p.username}</b></td><td style="color:#f1c40f;">${ket}</td><td><button class="btn-acc" onclick="accPlayer('${p._id}')">ACC & Beri 100rb</button></td></tr>`;
+                    let ket = p.status === 'pending' ? 'Belum Di-ACC' : '⚠️ Request Topup!';
+                    html += `<tr><td><b>${p.username}</b></td><td style="color:#f1c40f;">${ket}</td><td><button class="btn-acc" onclick="accPlayer('${p._id}')">ACC</button></td></tr>`;
                 });
-                pendingHtml += '</table>';
-                pendingContainer.innerHTML = pendingHtml;
+                html += '</table>';
+                pendingContainer.innerHTML = html;
             }
 
             const tbody = document.getElementById('all-players-body');
-            tbody.innerHTML = '';
-            if (players.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Belum ada pemain terdaftar.</td></tr>';
-                return;
-            }
-
+            tbody.innerHTML = players.length === 0 ? '<tr><td colspan="5" style="text-align: center;">Belum ada pemain.</td></tr>' : '';
+            
             players.forEach(p => {
                 let statusColor = p.status === 'active' ? 'color: #28a745;' : 'color: #ffc107;';
                 tbody.innerHTML += `<tr>
@@ -106,16 +80,12 @@
                     <td style="${statusColor}">${p.status.toUpperCase()}</td>
                     <td><input type="number" id="balance-${p._id}" value="${p.balance}"></td>
                     <td><button class="btn-edit" onclick="updateBalance('${p._id}', '${p.username}')">Simpan</button></td>
-                    <td>
-                        <button class="btn-history" onclick="loadHistory('${p.username}')">History</button>
-                        <button class="btn-del" onclick="deletePlayer('${p._id}')">Hapus</button>
-                    </td>
+                    <td><button class="btn-del" onclick="deletePlayer('${p._id}')">Hapus</button></td>
                 </tr>`;
             });
-            loadHistory();
         } catch (err) {
-            console.error("Gagal memuat data admin:", err);
-            document.getElementById('all-players-body').innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff6b6b;">Gagal memuat data dari server.</td></tr>`;
+            console.error("Gagal memuat admin:", err);
+            document.getElementById('all-players-body').innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff6b6b;">Gagal memuat dari server.</td></tr>`;
         }
     }
 
@@ -136,31 +106,6 @@
             await fetch(`${API_URL}/admin/delete-player/${playerId}`, { method: 'DELETE' });
             loadAllPlayers();
         }
-    }
-
-    async function loadHistory(username = '') {
-        document.getElementById('history-title').innerText = username ? `(${username})` : `(Global)`;
-        let url = username ? `${API_URL}/history?username=${username}` : `${API_URL}/history`;
-        const res = await fetch(url);
-        let histories = await res.json();
-        
-        const tbody = document.getElementById('history-body');
-        tbody.innerHTML = '';
-        if (histories.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada riwayat.</td></tr>';
-            return;
-        }
-        histories.forEach(h => {
-            let color = h.result === 'WIN' ? '#28a745' : '#dc3545';
-            tbody.innerHTML += `<tr>
-                <td>${new Date(h.playedAt).toLocaleString()}</td>
-                <td><b>${h.username}</b></td>
-                <td>Room #${h.roomNumber}</td>
-                <td style="color:${color}; font-weight:bold;">${h.result}</td>
-                <td style="color:${color};">${h.pointsChange > 0 ? '+' + h.pointsChange : h.pointsChange}</td>
-                <td>${h.durationMinutes}m</td>
-            </tr>`;
-        });
     }
 
     loadAllPlayers();
