@@ -21,7 +21,7 @@ mongoose.connect(MONGO_URI)
 const playerSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  balance: { type: Number, default: 100000 }, // Saldo awal otomatis 100.000
+  balance: { type: Number, default: 100000 },
   status: { type: String, enum: ['pending', 'active', 'banned'], default: 'pending' },
   topupRequested: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
@@ -91,9 +91,49 @@ app.get('/api/history', async (req, res) => {
   }
 });
 
+// --- ADMIN API ROUTES (Wajib ditambahkan agar admin.html berfungsi) ---
+app.get('/api/admin/all-players', async (req, res) => {
+  try {
+    const players = await Player.find().sort({ createdAt: -1 });
+    res.json(players);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/acc-player', async (req, res) => {
+  try {
+    const { playerId } = req.body;
+    await Player.findByIdAndUpdate(playerId, { status: 'active', topupRequested: false });
+    res.json({ success: true, message: "Akun pemain berhasil di-ACC!" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/update-balance', async (req, res) => {
+  try {
+    const { username, newBalance } = req.body;
+    await Player.findOneAndUpdate({ username }, { balance: Number(newBalance), topupRequested: false });
+    res.json({ success: true, message: "Saldo berhasil diperbarui!" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/admin/delete-player/:id', async (req, res) => {
+  try {
+    await Player.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Akun pemain berhasil dihapus!" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+// ------------------------------------------------------------------
+
 // --- SOCKET.IO ROOMS & GAME ENGINE ---
 const rooms = {};
-const DEBT_LIMIT = -10000000; // Batas maksimal hutang pemain (-10 Juta)
+const DEBT_LIMIT = -10000000;
 
 async function savePlayerBalanceToDB(username, balance) {
   try {
@@ -174,7 +214,6 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('update_room_state', room);
   });
 
-  // WebRTC Signaling untuk Voice Chat / Mikrofon
   socket.on('webrtc_offer', ({ target, offer }) => {
     io.to(target).emit('webrtc_offer', { sender: socket.id, offer });
   });
@@ -187,7 +226,6 @@ io.on('connection', (socket) => {
     io.to(target).emit('webrtc_ice_candidate', { sender: socket.id, candidate });
   });
 
-  // Fitur Request Topup ketika Saldo/Hutang Habis
   socket.on('request_topup', async ({ username }) => {
     try {
       await Player.findOneAndUpdate({ username }, { topupRequested: true });
@@ -205,7 +243,6 @@ io.on('connection', (socket) => {
       let numericBet = parseInt(bet) || 1000;
       if (numericBet > 10000000) numericBet = 10000000;
 
-      // Validasi Batas Hutang Max -10 Juta
       if ((p.balance - numericBet) < DEBT_LIMIT) {
         socket.emit('room_error', 'Limit hutang Anda mencapai batas (-10 Juta)! Silahkan Request Topup.');
         return;
@@ -572,9 +609,10 @@ function evaluateHostRound(room, roomId) {
         recordHistory(p.username, roomId, 'BLACKJACK', winBonus);
         return 'BLACKJACK';
       } else if (dScore > 21 || pScore > dScore) {
-        p.balance += betAmount; 
+        let winBonus = betAmount;
+        p.balance += winBonus; 
         if (hostPlayer) hostPlayer.balance -= winBonus;
-        recordHistory(p.username, roomId, 'WIN', betAmount);
+        recordHistory(p.username, roomId, 'WIN', winBonus);
         return 'WIN';
       } else if (pScore === dScore) {
         recordHistory(p.username, roomId, 'PUSH', 0);
