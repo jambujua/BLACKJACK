@@ -53,6 +53,42 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
         }
 
+        /* Styling Chip Taruhan */
+        .chip-container {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        .casino-chip {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px dashed rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 0 6px rgba(0,0,0,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+        .casino-chip:hover {
+            transform: scale(1.1);
+        }
+        .casino-chip:active {
+            transform: scale(0.95);
+        }
+        .chip-1k { background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%); }
+        .chip-5k { background: radial-gradient(circle, #10b981 0%, #059669 100%); }
+        .chip-25k { background: radial-gradient(circle, #ef4444 0%, #b91c1c 100%); }
+        .chip-100k { background: radial-gradient(circle, #8b5cf6 0%, #6d28d9 100%); }
+        .chip-1m { background: radial-gradient(circle, #f59e0b 0%, #b45309 100%); }
+
         #signal-indicator {
             position: fixed; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px;
             background: rgba(15, 23, 42, 0.9); padding: 5px 12px; border-radius: 20px; font-size: 11px; z-index: 9999;
@@ -252,9 +288,18 @@
 
             <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px; border: 1px solid rgba(255,255,255,0.08);">
                 <div id="betting-controls">
-                    <label>🪙 Taruhan Poin (Max 10 Juta):</label><br>
-                    <input type="number" id="player-bet" value="1000" max="10000000" oninput="validateMaxBet(this)" style="max-width:140px; display:inline-block; padding:6px;">
-                    <button onclick="toggleReady()" id="ready-btn" style="max-width:140px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; display:inline-block; padding:7px;">SIAP (Ready)</button>
+                    <label>🪙 Pilih Chip Taruhan: <b id="selected-bet-display" style="color:#f1c40f;">1.000</b></label>
+                    <div class="chip-container">
+                        <div class="casino-chip chip-1k" onclick="addBet(1000)">1K</div>
+                        <div class="casino-chip chip-5k" onclick="addBet(5000)">5K</div>
+                        <div class="casino-chip chip-25k" onclick="addBet(25000)">25K</div>
+                        <div class="casino-chip chip-100k" onclick="addBet(100000)">100K</div>
+                        <div class="casino-chip chip-1m" onclick="addBet(1000000)">1M</div>
+                    </div>
+                    <div style="display:flex; gap:6px; justify-content:center; margin-top:4px;">
+                        <button onclick="resetBet()" style="background:#374151; color:white; max-width:100px; padding:7px; font-size:11px; margin:0;">Reset Taruhan</button>
+                        <button onclick="toggleReady()" id="ready-btn" style="max-width:180px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; margin:0; padding:7px;">SIAP (Ready)</button>
+                    </div>
                 </div>
 
                 <!-- Panel Topup Otomatis Jika Hutang Mencapai -10 Juta -->
@@ -310,6 +355,23 @@
         const socket = io();
         const API_URL = '/api';
         let myData = { username: '', balance: 0, roomId: '', isHost: false, isReady: false, hasAgreedEnd: false };
+        let currentBetAmount = 1000; // Default taruhan awal
+
+        function addBet(amount) {
+            if (myData.isReady) return; // Tidak bisa mengubah taruhan saat sudah siap
+            currentBetAmount += amount;
+            if (currentBetAmount > 10000000) {
+                currentBetAmount = 10000000;
+                alert("Batas maksimal taruhan adalah 10.000.000 poin!");
+            }
+            document.getElementById('selected-bet-display').innerText = formatNumber(currentBetAmount);
+        }
+
+        function resetBet() {
+            if (myData.isReady) return;
+            currentBetAmount = 1000;
+            document.getElementById('selected-bet-display').innerText = formatNumber(currentBetAmount);
+        }
 
         let audioCtx = null;
         let bgmPlaying = false;
@@ -492,13 +554,6 @@
             } catch(e) {}
         }
 
-        function validateMaxBet(input) {
-            if (input.value > 10000000) {
-                input.value = 10000000;
-                alert("Batas maksimal taruhan adalah 10.000.000 poin!");
-            }
-        }
-
         function formatNumber(num) {
             return Number(num || 0).toLocaleString('id-ID');
         }
@@ -669,8 +724,7 @@
 
         function toggleReady() {
             myData.isReady = !myData.isReady;
-            let bet = document.getElementById('player-bet').value;
-            if (bet > 10000000) bet = 10000000;
+            let bet = currentBetAmount;
             let btn = document.getElementById('ready-btn');
             btn.innerText = myData.isReady ? "BATAL SIAP" : "SIAP (Ready)";
             btn.style.background = myData.isReady ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)";
@@ -739,7 +793,6 @@
                 myData.balance = me.balance;
                 document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
                 
-                // Cek batas hutang maksimal (-10 Juta)
                 let bettingControls = document.getElementById('betting-controls');
                 let topupPanel = document.getElementById('topup-panel');
                 if (me.balance <= -10000000 && !myData.isHost) {
