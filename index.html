@@ -7,20 +7,86 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-        body { font-family: 'Poppins', sans-serif; background: radial-gradient(circle at center, #111827 0%, #030712 100%); color: #f3f4f6; text-align: center; margin: 0; padding: 10px; min-height: 100vh; }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%); 
+            color: #f3f4f6; 
+            text-align: center; 
+            margin: 0; 
+            padding: 10px; 
+            min-height: 100vh; 
+        }
+
         .container { max-width: 1050px; margin: 0 auto; }
-        .card-box { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); padding: 25px; border-radius: 16px; max-width: 380px; margin: 40px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.8); text-align: left; border: 1px solid rgba(241, 196, 15, 0.3); }
-        .card-box h2 { text-align: center; color: #f1c40f; margin-top:0; font-size: 22px; font-weight: 700; }
+
+        .card-box { 
+            background: rgba(17, 24, 39, 0.85); 
+            backdrop-filter: blur(12px);
+            padding: 25px; 
+            border-radius: 16px; 
+            max-width: 380px; 
+            margin: 40px auto; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+            text-align: left; 
+            border: 1px solid rgba(241, 196, 15, 0.3); 
+        }
+
+        .card-box h2 { text-align: center; color: #f1c40f; margin-top: 0; font-size: 22px; font-weight: 700; }
         .form-group { margin-bottom: 12px; }
         label { font-size: 12px; color: #9ca3af; font-weight: 600; }
-        input, select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #374151; background: #0b0f19; color: white; margin-top: 5px; font-size: 14px; }
-        button { padding: 11px; font-size: 14px; border-radius: 8px; border: none; background: linear-gradient(135deg, #f1c40f 0%, #d4af37 100%); font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; color: #111; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3); }
-        #lobby-section, #game-wrapper, #auth-section { display: none; }
-        .room-panel { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
-        .panel-card { background: rgba(17, 24, 39, 0.85); padding: 15px; border-radius: 12px; width: 100%; max-width: 330px; text-align: left; border: 1px solid rgba(255,255,255,0.08); }
+        input { 
+            width: 100%; 
+            box-sizing: border-box; 
+            padding: 10px; 
+            border-radius: 8px; 
+            border: 1px solid #374151; 
+            background: #0b0f19; 
+            color: white; 
+            margin-top: 5px; 
+            font-size: 14px; 
+        }
+        input:focus { border-color: #f1c40f; outline: none; }
         
+        button { 
+            padding: 11px; 
+            font-size: 14px; 
+            border-radius: 8px; 
+            border: none; 
+            background: linear-gradient(135deg, #f1c40f 0%, #d4af37 100%); 
+            font-weight: 700; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 10px; 
+            color: #111; 
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.3); 
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        
+        #lobby-section, #game-wrapper { display: none; }
+        
+        .room-panel { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+        .panel-card { 
+            background: rgba(17, 24, 39, 0.85); 
+            padding: 15px; 
+            border-radius: 12px; 
+            width: 100%; 
+            max-width: 350px; 
+            text-align: left; 
+            border: 1px solid rgba(255,255,255,0.08); 
+            box-sizing: border-box;
+        }
+
+        /* Styling Chip Taruhan */
         .chip-container { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 8px 0; }
-        .casino-chip { width: 48px; height: 48px; border-radius: 50%; border: 3px dashed rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; cursor: pointer; user-select: none; }
+        .casino-chip { 
+            width: 48px; height: 48px; border-radius: 50%; 
+            border: 3px dashed rgba(255, 255, 255, 0.6); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 10px; font-weight: 700; color: white; cursor: pointer; 
+            user-select: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+        }
         .casino-chip:hover { transform: scale(1.1); }
         .chip-1k { background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%); }
         .chip-5k { background: radial-gradient(circle, #10b981 0%, #059669 100%); }
@@ -28,19 +94,33 @@
         .chip-100k { background: radial-gradient(circle, #8b5cf6 0%, #6d28d9 100%); }
         .chip-1m { background: radial-gradient(circle, #f59e0b 0%, #b45309 100%); }
 
-        .room-header-bar { background: rgba(17, 24, 39, 0.9); padding: 10px 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-left: 5px solid #f1c40f; }
-        .casino-table { border: 2px solid rgba(241, 196, 15, 0.25); border-radius: 16px; padding: 15px; margin-top: 5px; display: flex; flex-direction: column; gap: 12px; }
+        .room-header-bar { 
+            background: rgba(17, 24, 39, 0.9); padding: 10px 18px; border-radius: 10px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 12px; border-left: 5px solid #f1c40f; font-size: 13px; 
+        }
+
+        .casino-table { 
+            border: 2px solid rgba(241, 196, 15, 0.25); border-radius: 16px; padding: 15px; 
+            display: flex; flex-direction: column; gap: 12px; background: rgba(3, 7, 18, 0.6); 
+        }
         .dealer-box-ui { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(241, 196, 15, 0.2); border-radius: 12px; padding: 10px; text-align: center; }
         .players-box-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+
         .cards-container { display: flex; justify-content: center; min-height: 60px; margin-top: 6px; }
-        .card { background: #fff; color: #111; width: 40px; height: 60px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 3px; font-size: 11px; font-weight: 700; border: 1px solid #d1d5db; position: relative; }
+        .card { 
+            background: #fff; color: #111; width: 40px; height: 60px; border-radius: 6px; 
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center; 
+            padding: 3px; font-size: 11px; font-weight: 700; border: 1px solid #d1d5db; position: relative; 
+        }
         .card:not(:first-child) { margin-left: -16px; }
         .red-suit { color: #ef4444 !important; }
+
         .player-chip { background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); font-size: 11px; text-align: center; }
-        .ready-true { border-color: #10b981; }
+        .ready-true { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
         .ready-false { border-color: #ef4444; }
-        .chat-box { background: #030712; padding: 8px; border-radius: 8px; height: 80px; overflow-y: auto; font-size: 10px; text-align: left; margin-bottom: 6px; }
-        .lobby-scroll-box { max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 6px; padding: 6px; font-size: 11px; text-align: left; }
+
+        .lobby-scroll-box { max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 6px; padding: 6px; font-size: 11px; text-align: left; }
     </style>
 </head>
 <body>
@@ -49,38 +129,40 @@
         <!-- AUTH SECTION -->
         <div id="auth-section" class="card-box">
             <h2>Blackjack 507</h2>
-            <div class="form-group"><label>Username</label><input type="text" id="username" placeholder="Username..."></div>
-            <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="Password..."></div>
+            <div class="form-group"><label>Username</label><input type="text" id="username" placeholder="Masukkan username..."></div>
+            <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="Masukkan password..."></div>
             <button onclick="loginUser()">Masuk (Login)</button>
-            <button onclick="registerUser()" style="background: #3b82f6; color:white;">Daftar Akun Baru</button>
-            <div id="auth-msg" style="color:#ef4444; margin-top:8px; text-align:center; font-size:11px;"></div>
+            <button onclick="registerUser()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color:white;">Daftar Akun Baru</button>
+            <div id="auth-msg" style="color:#ef4444; margin-top:8px; text-align:center; font-size:11px; font-weight:600;"></div>
         </div>
 
         <!-- LOBBY SECTION -->
         <div id="lobby-section">
-            <h2 style="color: #f1c40f;">Halo, <span id="lbl-username"></span> | Saldo: <span id="lbl-balance">0</span></h2>
+            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                <h2 style="color: #f1c40f; margin: 0; font-size: 18px;">Selamat Datang, <span id="lbl-username"></span></h2>
+                <p style="font-size: 13px; color: #10b981; margin: 4px 0 0 0; font-weight: 700;">🪙 Saldo: <span id="lbl-balance">0</span></p>
+            </div>
+            
             <div class="room-panel">
                 <div class="panel-card">
-                    <h3>Buat Room Baru</h3>
-                    <label>ID Room</label><input type="text" id="create-room-id" placeholder="room17">
-                    <button onclick="createRoom()">Buat Room</button>
+                    <h3 style="font-size: 13px; margin-top:0; color:#f1c40f;">Buat Room Baru</h3>
+                    <label>ID Room</label><input type="text" id="create-room-id" placeholder="Contoh: room17">
+                    <button onclick="createRoom()">Buat Room (Bandar)</button>
                 </div>
                 <div class="panel-card">
-                    <h3>Gabung Room</h3>
-                    <label>ID Room</label><input type="text" id="join-room-id" placeholder="room17">
-                    <button onclick="joinRoom()" style="background:#10b981; color:white;">Gabung</button>
+                    <h3 style="font-size: 13px; margin-top:0; color:#10b981;">Gabung Room</h3>
+                    <label>ID Room</label><input type="text" id="join-room-id" placeholder="ID Room teman">
+                    <button onclick="joinRoom()" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">Gabung</button>
                 </div>
             </div>
-            <div class="room-panel" style="margin-top:10px;">
-                <div class="panel-card" style="max-width:480px;">
-                    <h3>🌐 Room Aktif</h3>
-                    <div class="lobby-scroll-box" id="active-rooms-list">Memuat...</div>
-                </div>
-                <div class="panel-card" style="max-width:480px;">
-                    <h3>📜 Histori Anda</h3>
-                    <div class="lobby-scroll-box" id="player-history-list">Memuat...</div>
+
+            <div class="room-panel" style="margin-top: 10px;">
+                <div class="panel-card" style="max-width: 480px;">
+                    <h3 style="font-size: 12px; margin:0; color:#38bdf8;">🌐 Room Aktif</h3>
+                    <div class="lobby-scroll-box" id="active-rooms-list">Memuat daftar room...</div>
                 </div>
             </div>
+            <div id="lobby-msg" style="color:#ef4444; margin-top:10px; font-size:11px;"></div>
         </div>
 
         <!-- GAME ROOM SECTION -->
@@ -91,20 +173,22 @@
                 <div>Saldo Anda: <strong id="game-live-balance" style="color:#10b981;">0</strong></div>
             </div>
             
-            <div class="casino-table" id="casino-table-theme">
+            <div class="casino-table">
                 <div class="dealer-box-ui">
-                    <div style="color:#f1c40f; font-weight:700;">👑 DEALER (Total: <span id="dealer-score-lbl">0</span>)</div>
+                    <div style="font-size:12px; font-weight:700; color:#f1c40f; margin-bottom:2px;">👑 BANDAR / DEALER</div>
+                    <div style="font-size:10px; color:#9ca3af;">Total Poin: <strong id="dealer-score-lbl" style="color:#f1c40f;">0</strong></div>
                     <div class="cards-container" id="dealer-cards"></div>
                 </div>
+
                 <div>
-                    <div style="color:#38bdf8; font-weight:700; text-align:left;">👥 PEMAIN</div>
+                    <div style="font-size:11px; font-weight:700; color:#38bdf8; margin-bottom:6px; text-align:left;">👥 MEJA PEMAIN</div>
                     <div class="players-box-grid" id="room-players-list"></div>
                 </div>
             </div>
 
-            <div id="control-panel" style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px;">
+            <div style="background:rgba(17, 24, 39, 0.85); padding:10px; border-radius:12px; margin-top:10px;">
                 <div id="betting-controls">
-                    <label>Pilih Chip Taruhan: <b id="selected-bet-display" style="color:#f1c40f;">1.000</b></label>
+                    <label>🪙 Taruhan Dipilih: <b id="selected-bet-display" style="color:#f1c40f;">1.000</b></label>
                     <div class="chip-container">
                         <div class="casino-chip chip-1k" onclick="selectChip(1000)">1K</div>
                         <div class="casino-chip chip-5k" onclick="selectChip(5000)">5K</div>
@@ -112,24 +196,25 @@
                         <div class="casino-chip chip-100k" onclick="selectChip(100000)">100K</div>
                         <div class="casino-chip chip-1m" onclick="selectChip(1000000)">1M</div>
                     </div>
-                    <div style="display:flex; gap:6px; justify-content:center;">
-                        <button onclick="resetBet()" style="background:#374151; color:white; max-width:100px;">Reset</button>
-                        <button onclick="toggleReady()" id="ready-btn" style="background:#10b981; color:white; max-width:180px;">SIAP (Ready)</button>
+                    <div style="display:flex; gap:6px; justify-content:center; margin-top:4px;">
+                        <button onclick="toggleReady()" id="ready-btn" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:white; padding:7px;">SIAP (Ready)</button>
                     </div>
                 </div>
-                <div id="host-controls" style="display:none;">
-                    <button onclick="startGame()" style="background:#f59e0b; color:white; max-width:160px;">Mulai Kartu</button>
+                
+                <div id="host-controls" style="margin-top:6px; display:none;">
+                    <button onclick="startGame()" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; padding:7px;">Mulai Kartu</button>
                 </div>
             </div>
 
+            <!-- TOMBOL AKSI PEMAIN -->
             <div id="action-panel" style="display:none; margin-top:10px;">
                 <div style="display:flex; gap:6px; justify-content:center;">
-                    <button onclick="sendAction('hit')" style="background:#3b82f6; color:white; width:70px;">Hit</button>
-                    <button onclick="sendAction('stand')" style="background:#ef4444; color:white; width:70px;">Stand</button>
-                    <button onclick="sendAction('double')" style="background:#10b981; color:white; width:70px;">Double</button>
-                    <button id="split-btn" onclick="sendAction('split')" style="background:#a855f7; color:white; width:70px; display:none;">Split</button>
+                    <button onclick="sendAction('hit')" style="background:#3b82f6; color:white; width:80px; padding:7px;">Hit</button>
+                    <button onclick="sendAction('stand')" style="background:#ef4444; color:white; width:80px; padding:7px;">Stand</button>
                 </div>
             </div>
+            
+            <button onclick="location.reload()" style="background:#374151; color:white; max-width:150px; margin-top:12px; padding:6px; font-size:11px;">Keluar Room</button>
         </div>
     </div>
 
@@ -141,31 +226,40 @@
 
         function selectChip(amount) {
             if (myData.isReady) return;
-            currentBetAmount = amount > 10000000 ? 10000000 : amount;
+            currentBetAmount = amount;
             document.getElementById('selected-bet-display').innerText = formatNumber(currentBetAmount);
         }
 
-        function resetBet() {
-            if (myData.isReady) return;
-            currentBetAmount = 1000;
-            document.getElementById('selected-bet-display').innerText = formatNumber(currentBetAmount);
+        function formatNumber(num) {
+            return Number(num || 0).toLocaleString('id-ID');
         }
-
-        function formatNumber(num) { return Number(num || 0).toLocaleString('id-ID'); }
 
         async function registerUser() {
-            let u = document.getElementById('username').value;
-            let p = document.getElementById('password').value;
-            let res = await fetch(`${API_URL}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username: u, password: p}) });
+            let username = document.getElementById('username').value.trim();
+            let password = document.getElementById('password').value.trim();
+            if(!username || !password) { alert("Isi username dan password!"); return; }
+
+            let res = await fetch(`${API_URL}/register`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ username, password }) 
+            });
             let data = await res.json();
-            document.getElementById('auth-msg').style.color = data.success ? '#10b981' : '#ef4444';
-            document.getElementById('auth-msg').innerText = data.message;
+            let msgEl = document.getElementById('auth-msg');
+            msgEl.style.color = data.success ? '#10b981' : '#ef4444';
+            msgEl.innerText = data.message;
         }
 
         async function loginUser() {
-            let u = document.getElementById('username').value;
-            let p = document.getElementById('password').value;
-            let res = await fetch(`${API_URL}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username: u, password: p}) });
+            let username = document.getElementById('username').value.trim();
+            let password = document.getElementById('password').value.trim();
+            if(!username || !password) { alert("Isi username dan password!"); return; }
+
+            let res = await fetch(`${API_URL}/login`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ username, password }) 
+            });
             let data = await res.json();
             if (data.success) {
                 myData.username = data.player.username;
@@ -174,40 +268,53 @@
                 document.getElementById('lobby-section').style.display = 'block';
                 document.getElementById('lbl-username').innerText = myData.username;
                 document.getElementById('lbl-balance').innerText = formatNumber(myData.balance);
-                fetchLobbyData();
+                fetchLobbyRooms();
             } else {
                 document.getElementById('auth-msg').innerText = data.message;
             }
         }
 
-        async function fetchLobbyData() {
-            let resRooms = await fetch(`${API_URL}/rooms/active`);
-            let roomsList = await resRooms.json();
-            document.getElementById('active-rooms-list').innerHTML = roomsList.length === 0 ? 'Tidak ada room.' : roomsList.map(r => `<div>Room: ${r.roomId} (${r.playerCount} pemain) <button onclick="joinActive('${r.roomId}')">Gabung</button></div>`).join('');
-        }
-
-        function joinActive(roomId) {
-            socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
+        async function fetchLobbyRooms() {
+            try {
+                let res = await fetch(`${API_URL}/rooms/active`);
+                let rooms = await res.json();
+                let container = document.getElementById('active-rooms-list');
+                if(rooms.length === 0) {
+                    container.innerHTML = 'Tidak ada room aktif.';
+                } else {
+                    container.innerHTML = rooms.map(r => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <span><b>Room: ${r.roomId}</b> (Bandar: ${r.hostUsername})</span>
+                            <button onclick="joinActiveRoom('${r.roomId}')" style="width:auto; padding:3px 8px; margin:0; font-size:10px; background:#10b981; color:white;">Gabung</button>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
         }
 
         function createRoom() {
             let roomId = document.getElementById('create-room-id').value.trim();
-            if(!roomId) return alert("Masukkan ID Room!");
+            if(!roomId) { alert("Masukkan ID Room!"); return; }
             socket.emit('create_room', { roomId, username: myData.username, balance: myData.balance });
         }
 
         function joinRoom() {
             let roomId = document.getElementById('join-room-id').value.trim();
-            if(!roomId) return alert("Masukkan ID Room!");
+            if(!roomId) { alert("Masukkan ID Room!"); return; }
+            socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
+        }
+
+        function joinActiveRoom(roomId) {
             socket.emit('join_room', { roomId, username: myData.username, balance: myData.balance });
         }
 
         socket.on('room_joined', ({ roomId, isHost, hostUsername }) => {
             myData.roomId = roomId;
             myData.isHost = isHost;
-            document.getElementById('lobby-section').style.display = 'none';
             document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('lobby-section').style.display = 'none';
             document.getElementById('game-wrapper').style.display = 'block';
+            
             document.getElementById('current-room-lbl').innerText = roomId;
             document.getElementById('current-host-lbl').innerText = hostUsername;
             document.getElementById('host-controls').style.display = isHost ? 'block' : 'none';
@@ -221,8 +328,13 @@
             socket.emit('set_ready', { roomId: myData.roomId, bet: currentBetAmount, ready: myData.isReady });
         }
 
-        function startGame() { socket.emit('start_game', myData.roomId); }
-        function sendAction(action) { socket.emit('player_action', { roomId: myData.roomId, handIndex: 0, action }); }
+        function startGame() {
+            socket.emit('start_game', myData.roomId);
+        }
+
+        function sendAction(action) {
+            socket.emit('player_action', { roomId: myData.roomId, handIndex: 0, action });
+        }
 
         socket.on('update_room_state', (room) => {
             let me = room.players.find(p => p.username === myData.username);
@@ -230,6 +342,10 @@
                 myData.balance = me.balance;
                 document.getElementById('game-live-balance').innerText = formatNumber(myData.balance);
             }
+        });
+
+        socket.on('room_error', (msg) => {
+            alert(msg);
         });
     </script>
 </body>
